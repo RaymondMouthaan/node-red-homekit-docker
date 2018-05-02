@@ -17,10 +17,11 @@ USER node-red
 RUN npm install @boneskull/node-red-contrib-homekit
 
 # Clean up
-RUN su-exec root apk del git python make g++ && \
-    su-exec root rm -rf /var/cache/apk/*
-    
-COPY entrypoint.sh /usr/src/node-red
+RUN su-exec root apk del git python make g++
+    #&& \ su-exec root rm -rf /var/cache/apk/*
+
+COPY entrypoint.linux-amd64 /usr/src/node-red/entrypoint.sh
 RUN su-exec root chmod 755 /usr/src/node-red/entrypoint.sh
 
-ENTRYPOINT /usr/src/node-red/entrypoint.sh
+ENTRYPOINT ["/usr/src/node-red/entrypoint.sh"]
+CMD ["su-exec root /bin/sh"]
