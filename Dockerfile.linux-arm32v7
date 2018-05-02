@@ -1,4 +1,7 @@
 FROM nodered/node-red-docker:rpi-v8
+COPY tmp/qemu-arm-static /usr/bin/qemu-arm-static
+LABEL maintainer="Raymond M Mouthaan <raymondmmouthaan@gmail.com>"
+
 USER root
 ENV HOST_NAME myrpi_hostname
 ENV GOSU_VERSION 1.10
