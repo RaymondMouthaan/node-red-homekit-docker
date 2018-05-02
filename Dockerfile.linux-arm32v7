@@ -44,6 +44,6 @@ RUN npm install @boneskull/node-red-contrib-homekit
 
 # Cleanup Todo
 
-COPY entrypoint.linux-arm /usr/src/node-red/entrypoint.sh
+COPY entrypoint.linux-arm32v7 /usr/src/node-red/entrypoint.sh
 RUN gosu root chmod 755 /usr/src/node-red/entrypoint.sh
 ENTRYPOINT ["/usr/src/node-red/entrypoint.sh"]
