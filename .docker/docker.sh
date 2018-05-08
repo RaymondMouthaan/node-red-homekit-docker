@@ -45,7 +45,7 @@ docker_build() {
 
 docker_build_node_v8() {
     # Build node v8 based images
-    docker build --no-cache --build-arg NODE_RED_IMAGE=$NODE_RED_IMAGE --build-arg NODE_RED_IMAGE_TAG=$NODE_RED_IMAGE_TAG  --build-arg QEMU_ARCH=x86_64 --file ./.docker/Dockerfile.alpine-tmpl --tag $IMAGE:build-$NODE_RED_VERSION-alpine-amd64 .
+    docker build --no-cache --build-arg NODE_RED_IMAGE=$NODE_RED_IMAGE --build-arg NODE_RED_IMAGE_TAG=0.18.4-8-alpine-amd64  --build-arg QEMU_ARCH=x86_64 --file ./.docker/Dockerfile.alpine-tmpl --tag $IMAGE:build-$NODE_RED_VERSION-alpine-amd64 .
     # docker build --no-cache --build-arg NODE_RED_VERSION=v$NODE_RED_VERSION --build-arg ARCH=arm32v6 --build-arg NODE_IMAGE_TAG=8-alpine --build-arg QEMU_ARCH=arm    --file ./.docker/Dockerfile.alpine-tmpl --tag $IMAGE:build-8-alpine-arm32v6 .
     # docker build --no-cache --build-arg NODE_RED_VERSION=v$NODE_RED_VERSION --build-arg ARCH=arm32v7 --build-arg NODE_IMAGE_TAG=8-slim   --build-arg QEMU_ARCH=arm    --file ./.docker/Dockerfile.debian-tmpl --tag $IMAGE:build-8-debian-arm32v7 .
     # docker build --no-cache --build-arg NODE_RED_VERSION=v$NODE_RED_VERSION --build-arg ARCH=arm64v8 --build-arg NODE_IMAGE_TAG=8-alpine  --build-arg QEMU_ARCH=aarch64 --file ./.docker/Dockerfile.alpine-tmpl --tag $IMAGE:build-8-alpine-arm64v8 .

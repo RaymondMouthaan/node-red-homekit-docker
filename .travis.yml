@@ -8,10 +8,9 @@ language:
 
 env:
   global:
-    - VERSION=0.1
     - NODE_RED_VERSION=0.18.4
     - NODE_RED_IMAGE=raymondmm/node-red
-    - NODE_RED_IMAGE_TAG=0.18.4-8-alpine-amd64
+    - VERSION=v0.1
     - IMAGE=raymondmm/node-red-homekit
     - QEMU_VERSION=v2.11.1
 
