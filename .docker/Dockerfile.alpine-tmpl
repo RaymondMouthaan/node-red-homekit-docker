@@ -48,7 +48,7 @@ RUN npm install @boneskull/node-red-contrib-homekit
 RUN su-exec root apk del git python make g++
     #&& \ su-exec root rm -rf /var/cache/apk/*
 
-COPY entrypoint.debian /usr/src/node-red/entrypoint.sh
+COPY entrypoint.alpine /usr/src/node-red/entrypoint.sh
 RUN su-exec root chmod 755 /usr/src/node-red/entrypoint.sh
 
 ENTRYPOINT ["/usr/src/node-red/entrypoint.sh"]
