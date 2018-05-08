@@ -45,7 +45,7 @@ USER node-red
 RUN npm install @boneskull/node-red-contrib-homekit
 
 # Clean up
-RUN su-exec root apk del git python make g++
+#RUN su-exec root apk del git python make g++
     #&& \ su-exec root rm -rf /var/cache/apk/*
 
 COPY entrypoint.alpine /usr/src/node-red/entrypoint.sh
