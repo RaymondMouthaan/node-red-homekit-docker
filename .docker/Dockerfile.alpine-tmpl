@@ -1,61 +1,49 @@
-ARG ARCH
-ARG NODE_IMAGE_TAG
+ARG NODE_RED_IMAGE
+ARG NODE_RED_IMAGE_TAG
 
-FROM $ARCH/node:$NODE_IMAGE_TAG
+FROM $NODE_RED_IMAGE:$NODE_RED_IMAGE_TAG
 
 # Define ARGs again to make them available after FROM
-ARG ARCH
-ARG NODE_IMAGE_TAG
 ARG QEMU_ARCH
-ARG NODE_RED_VERSION
+ARG NODE_RED_IMAGE
+ARG NODE_RED_IMAGE_TAG
 
 COPY tmp/qemu-$QEMU_ARCH-static /usr/bin/qemu-$QEMU_ARCH-static
 
 # Copy ARCHs to ENVs to make them available at runtime
-ENV ARCH=$ARCH
-ENV NODE_IMAGE_TAG=$NODE_IMAGE_TAG
-ENV NODE_RED_VERSION=$NODE_RED_VERSION
+ENV NODE_RED_IMAGE=$NODE_RED_IMAGE
+ENV NODE_RED_IMAGE_TAG=$NODE_RED_IMAGE_TAG
 
-# Env variables holding file path for flows configuration
-ENV FLOWS=flows.json
-ENV NODE_PATH=/usr/src/node-red/node_modules:/data/node_modules
+# Env variable holding the host_name
+ENV HOST_NAME mydiskstation
 
-# Install tools only for node v8 based images
-RUN if [ "$NODE_IMAGE_TAG" = "8-alpine" ]; then \
-        apk add --update \
-        git \
-        openssh-keygen ; \
-        rm -rf /var/cache/apk/* ; \
-    fi
+# Install tools
+RUN apk add --update --no-cache \
+    git \
+    python \
+    make \
+    g++ \
+    avahi-compat-libdns_sd \
+    avahi-dev \
+    dbus \
+    su-exec
+    #rm -rf /var/cache/apk/*
 
-# Create Node-red application directory
-RUN mkdir -p /usr/src/node-red
-
-# Add node-red user and group (uid=1001 and gid=1001), so we aren't running as root.
-RUN addgroup -g 1001 -S node-red && \
-    adduser -S -h /usr/src/node-red -u 1001 node-red -G node-red
-
-# Set owner of Node-red application directory
-RUN chown -R node-red:node-red /usr/src/node-red
-
-# User data directory: contains flows, config and nodes.
-RUN mkdir /data && \
-    chown -R node-red:node-red /data
+RUN chown root:node-red /sbin/su-exec && chmod +s /sbin/su-exec && \
+    mkdir -p /var/run/dbus && mkdir -p /var/run/avahi-daemon && \
+    chown messagebus:messagebus /var/run/dbus && chown avahi:avahi /var/run/avahi-daemon && dbus-uuidgen --ensure
 
 # Run as node-red user
 USER node-red
+# Install node-red-contrib-homekit
+#RUN npm install node-red-contrib-homekit
+RUN npm install @boneskull/node-red-contrib-homekit
 
-# Set work directory
-WORKDIR /usr/src/node-red
+# Clean up
+RUN su-exec root apk del git python make g++
+    #&& \ su-exec root rm -rf /var/cache/apk/*
 
-# package.json contains Node-RED NPM module and node dependencies
-COPY package.json /usr/src/node-red/
-RUN npm install
+COPY entrypoint.debian /usr/src/node-red/entrypoint.sh
+RUN su-exec root chmod 755 /usr/src/node-red/entrypoint.sh
 
-# User configuration directory volume
-VOLUME ["/data"]
-
-# Expose the listening port of node-red
-EXPOSE 1880
-
-ENTRYPOINT ["npm", "start", "--", "--userDir", "/data"]
+ENTRYPOINT ["/usr/src/node-red/entrypoint.sh"]
