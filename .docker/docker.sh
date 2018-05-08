@@ -130,7 +130,6 @@ docker_manifest_list() {
     # Create and push manifest lists, displayed as FIFO
     echo "DOCKER MANIFEST: Create and Push docker manifest list."
     docker_manifest_list_node_v8
-    docker_manifest_list_default
     docker_manifest_list_latest
 }
 
