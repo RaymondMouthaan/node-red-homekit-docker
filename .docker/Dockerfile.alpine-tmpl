@@ -2,12 +2,17 @@ ARG NODE_RED_IMAGE
 ARG NODE_RED_IMAGE_TAG
 
 FROM $NODE_RED_IMAGE:$NODE_RED_IMAGE_TAG
+LABEL maintainer="Raymond M Mouthaan <raymondmmouthaan@gmail.com>"
 
 # Define ARGs again to make them available after FROM
 ARG QEMU_ARCH
 ARG NODE_RED_IMAGE
 ARG NODE_RED_IMAGE_TAG
 
+# Run as root
+USER root
+
+# Copy Qemu file
 COPY tmp/qemu-$QEMU_ARCH-static /usr/bin/qemu-$QEMU_ARCH-static
 
 # Copy ARCHs to ENVs to make them available at runtime
