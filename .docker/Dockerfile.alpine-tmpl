@@ -1,7 +1,7 @@
 ARG NODE_RED_IMAGE
 ARG NODE_RED_IMAGE_TAG
 
-FROM $NODE_RED_IMAGE:$NODE_RED_IMAGE_TAG
+FROM nodered/node-red-docker:slim-v8
 LABEL maintainer="Raymond M Mouthaan <raymondmmouthaan@gmail.com>"
 
 # Define ARGs again to make them available after FROM
