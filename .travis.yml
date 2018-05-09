@@ -1,5 +1,10 @@
 sudo: 'required'
 
+<<<<<<< HEAD
+=======
+language: bash
+
+>>>>>>> parent of c1106cb... Update .travis.yml
 services:
   - 'docker'
 
