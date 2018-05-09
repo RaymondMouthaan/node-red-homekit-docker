@@ -9,28 +9,28 @@ before_install:
   # Update docker for multi-stage build
   - sudo service docker stop
   - curl -fsSL https://get.docker.com/ | sudo sh
-  
+
 script:
   # Build all images
   - docker build --build-arg PLATFORM=linux-amd64 -t raymondmm/node-red-homekit:linux-amd64 -f Dockerfile.linux-amd64 .
 
 after_success:
-  - > 
+  - >
     if [ -n "$TRAVIS_TAG" ]; then
       # Docker login
-      echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
-      
+      echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+
       # Docker Tag
       docker tag raymondmm/node-red-homekit:linux-amd64 raymondmm/node-red-homekit:${TRAVIS_TAG}-linux-amd64
-      
+
       # Docker Push
       docker push raymondmm/node-red-homekit:${TRAVIS_TAG}-linux-amd64
-      
+
       # Download manifest-tool
       wget https://github.com/estesp/manifest-tool/releases/download/v0.7.0/manifest-tool-linux-amd64
       mv manifest-tool-linux-amd64 manifest-tool
       chmod +x manifest-tool
-      
+
       # Create and push manifest-list
       ./manifest-tool push from-args --platforms linux/amd64 --template "raymondmm/node-red-homekit:${TRAVIS_TAG}-OS-ARCH" --target "raymondmm/node-red-homekit:$TRAVIS_TAG"
       ./manifest-tool push from-args --platforms linux/amd64 --template "raymondmm/node-red-homekit:${TRAVIS_TAG}-OS-ARCH" --target "raymondmm/node-red-homekit:latest"
