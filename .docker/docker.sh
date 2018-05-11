@@ -114,7 +114,7 @@ docker_push() {
 docker_push_node_v8() {
     # Push node v8 based images
     docker push $IMAGE:latest-8-debian-amd64
-    docker push $IMAGE:$NODE_RED_VERSION-8-debian-amd64
+    docker push $IMAGE:$NODE_RED_HOMEKIT_VERSION-8-debian-amd64
 
     # docker push $IMAGE:latest-8-alpine-arm32v6
     # docker push $IMAGE:$NODE_RED_VERSION-8-alpine-arm32v6

@@ -9,7 +9,7 @@ language:
 env:
   global:
     - NODE_RED_HOMEKIT_VERSION=1.0
-    - IMAGE=raymondmm/node-red-home-kit
+    - IMAGE=raymondmm/node-red-homekit
     - QEMU_VERSION=v2.11.1
 
 before_install:
