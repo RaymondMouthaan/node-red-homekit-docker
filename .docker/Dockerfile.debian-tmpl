@@ -49,6 +49,6 @@ USER node-red
 #RUN npm install @boneskull/node-red-contrib-homekit
 RUN npm install node-red-contrib-homekit-bridged
 
-COPY entrypoint.debian /usr/src/node-red
+COPY entrypoint.debian /usr/src/node-red/entrypoint.sh
 RUN gosu root chmod 755 /usr/src/node-red/entrypoint.sh
 ENTRYPOINT /usr/src/node-red/entrypoint.sh
