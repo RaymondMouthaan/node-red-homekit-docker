@@ -1,12 +1,13 @@
 ARG BASE_IMAGE
 FROM $BASE_IMAGE
-USER root
+LABEL maintainer="Raymond M Mouthaan <raymondmmouthaan@gmail.com>"
 
 ARG QEMU_ARCH
 
 ENV GOSU_VERSION 1.10
 ENV HOST_NAME myhostname
 
+USER root
 COPY tmp/qemu-$QEMU_ARCH-static /usr/bin/qemu-$QEMU_ARCH-static
 
 RUN set -ex; \
