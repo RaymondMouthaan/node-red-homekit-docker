@@ -5,7 +5,7 @@ USER root
 ARG QEMU_ARCH
 
 ENV GOSU_VERSION 1.10
-ENV HOST_NAME
+ENV HOST_NAME myhostname
 
 COPY tmp/qemu-$QEMU_ARCH-static /usr/bin/qemu-$QEMU_ARCH-static
 
