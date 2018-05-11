@@ -57,7 +57,7 @@ docker_test() {
 
 docker_test_node_v8() {
     # Test all node v8 images
-    docker run -d --name=test-8-debian-amd64 $IMAGE:build-8-alpine-amd64
+    docker run -d --name=test-8-alpine-amd64 $IMAGE:build-8-alpine-amd64
     if [ $? -ne 0 ]; then
         echo "ERROR: Docker container failed to start for build-8-alpine-amd64."
         exit 1
