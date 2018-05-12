@@ -1,10 +1,11 @@
-ARG BASE_IMAGE
-FROM $BASE_IMAGE
+ARG NODE_RED_IMAGE_TAG
+FROM raymondmm/node-red:$NODE_RED_IMAGE_TAG
 LABEL maintainer="Raymond M Mouthaan <raymondmmouthaan@gmail.com>"
 
 ARG QEMU_ARCH
-
+ARG NODE_RED_IMAGE_TAG
 ENV HOST_NAME myhostname
+ENV NODE_RED_IMAGE_TAG $NODE_RED_IMAGE_TAG
 
 USER root
 COPY tmp/qemu-$QEMU_ARCH-static /usr/bin/qemu-$QEMU_ARCH-static
