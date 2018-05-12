@@ -1,11 +1,12 @@
-ARG BASE_IMAGE
-FROM $BASE_IMAGE
+ARG NODE_RED_IMAGE_TAG
+FROM raymondmm/node-red:$NODE_RED_IMAGE_TAG
 LABEL maintainer="Raymond M Mouthaan <raymondmmouthaan@gmail.com>"
 
 ARG QEMU_ARCH
-
-ENV GOSU_VERSION 1.10
+ARG NODE_RED_IMAGE_TAG
 ENV HOST_NAME myhostname
+ENV NODE_RED_IMAGE_TAG $NODE_RED_IMAGE_TAG
+ENV GOSU_VERSION 1.10
 
 USER root
 COPY tmp/qemu-$QEMU_ARCH-static /usr/bin/qemu-$QEMU_ARCH-static
@@ -40,8 +41,6 @@ RUN chown root:node-red /usr/local/bin/gosu && chmod +s /usr/local/bin/gosu
 
 RUN apt-get update -y && apt-get install -y apt-utils build-essential python make g++ avahi-daemon avahi-discover libnss-mdns libavahi-compat-libdnssd-dev
 
-# please replace diskstation with your server name
-#RUN sed -i "s/#enable-dbus=yes/enable-dbus=yes/g" /etc/avahi/avahi-daemon.conf && sed -i "s/.*host-name.*/host-name=$HOST_NAME/" /etc/avahi/avahi-daemon.conf
 RUN mkdir -p /var/run/dbus && mkdir -p /var/run/avahi-daemon
 RUN chown messagebus:messagebus /var/run/dbus && chown avahi:avahi /var/run/avahi-daemon && dbus-uuidgen --ensure
 
@@ -52,4 +51,5 @@ RUN npm install node-red-contrib-homekit-bridged
 
 COPY entrypoint.debian /usr/src/node-red/entrypoint.sh
 RUN gosu root chmod 755 /usr/src/node-red/entrypoint.sh
+
 ENTRYPOINT /usr/src/node-red/entrypoint.sh
