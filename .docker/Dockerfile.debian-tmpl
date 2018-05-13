@@ -11,9 +11,6 @@ ENV GOSU_VERSION 1.10
 USER root
 COPY tmp/qemu-$QEMU_ARCH-static /usr/bin/qemu-$QEMU_ARCH-static
 
-# Add jessie back ports
-RUN echo 'deb http://ftp.debian.org/debian jessie-backports main' >> /etc/apt/sources.list
-
 #RUN set -ex; \
 #        \
 #        fetchDeps=' \
@@ -43,6 +40,9 @@ RUN echo 'deb http://ftp.debian.org/debian jessie-backports main' >> /etc/apt/so
 #RUN chown root:node-red /usr/local/bin/gosu && chmod +s /usr/local/bin/gosu
 
 RUN apt-get update -y && apt-get install -y --no-install-recommends apt-utils build-essential python make g++ avahi-daemon avahi-discover libnss-mdns libavahi-compat-libdnssd-dev
+
+# Add jessie back ports
+RUN echo 'deb http://ftp.nl.debian.org/debian jessie-backports main' >> /etc/apt/sources.list
 RUN apt-get -t jessie-backports install -y --no-install-recommends gosu
 
 RUN mkdir -p /var/run/dbus && mkdir -p /var/run/avahi-daemon
