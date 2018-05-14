@@ -45,7 +45,7 @@ docker_build() {
 
 docker_build_node_v8() {
     # Build node v8 based images
-    docker build --no-cache --build-arg NODE_RED_IMAGE_TAG=$NODE_RED_VERSION-alpine-amd64   --build-arg QEMU_ARCH=x86_64 --file ./.docker/Dockerfile.alpine-tmpl --tag $IMAGE:build-$NODE_RED_VERSION-alpine-amd64 .
+#    docker build --no-cache --build-arg NODE_RED_IMAGE_TAG=$NODE_RED_VERSION-alpine-amd64   --build-arg QEMU_ARCH=x86_64 --file ./.docker/Dockerfile.alpine-tmpl --tag $IMAGE:build-$NODE_RED_VERSION-alpine-amd64 .
     #docker build --no-cache --build-arg NODE_RED_VERSION=v$NODE_RED_VERSION --build-arg ARCH=arm32v6 --build-arg NODE_IMAGE_TAG=8-alpine --build-arg QEMU_ARCH=arm    --file ./.docker/Dockerfile.alpine-tmpl --tag $IMAGE:build-8-alpine-arm32v6 .
     docker build --no-cache --build-arg NODE_RED_IMAGE_TAG=$NODE_RED_VERSION-debian-arm32v7 --build-arg QEMU_ARCH=arm    --file ./.docker/Dockerfile.debian-tmpl --tag $IMAGE:build-$NODE_RED_VERSION-debian-arm32v7 .
     #docker build --no-cache --build-arg NODE_RED_VERSION=v$NODE_RED_VERSION --build-arg ARCH=arm64v8 --build-arg NODE_IMAGE_TAG=8-alpine  --build-arg QEMU_ARCH=aarch64 --file ./.docker/Dockerfile.alpine-tmpl --tag $IMAGE:build-8-alpine-arm64v8 .
@@ -57,12 +57,12 @@ docker_test() {
 
 docker_test_node_v8() {
     # Test all node v8 images
-    docker run -d --name=test-$NODE_RED_VERSION-alpine-amd64 $IMAGE:build-$NODE_RED_VERSION-alpine-amd64
-    if [ $? -ne 0 ]; then
-        echo "ERROR: Docker container failed to start for build-$NODE_RED_VERSION-alpine-amd64."
-        exit 1
-    fi
-    docker stop test-$NODE_RED_VERSION-alpine-amd64 && docker rm test-$NODE_RED_VERSION-alpine-amd64
+#    docker run -d --name=test-$NODE_RED_VERSION-alpine-amd64 $IMAGE:build-$NODE_RED_VERSION-alpine-amd64
+#    if [ $? -ne 0 ]; then
+#        echo "ERROR: Docker container failed to start for build-$NODE_RED_VERSION-alpine-amd64."
+#        exit 1
+#    fi
+#    docker stop test-$NODE_RED_VERSION-alpine-amd64 && docker rm test-$NODE_RED_VERSION-alpine-amd64
 
     # docker run -d --name=test-8-alpine-arm32v6 $IMAGE:build-8-alpine-arm32v6
     # if [ $? -ne 0 ]; then
