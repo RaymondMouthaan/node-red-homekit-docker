@@ -40,7 +40,7 @@ COPY tmp/qemu-$QEMU_ARCH-static /usr/bin/qemu-$QEMU_ARCH-static
 
 #RUN chown root:node-red /usr/local/bin/gosu && chmod +s /usr/local/bin/gosu
 
-RUN apt-get update -y && apt-get install -y --no-install-recommends apt-utils build-essential python make g++ avahi-daemon avahi-discover libnss-mdns libavahi-compat-libdnssd-dev
+RUN apt-get update -y && apt-get install -y --no-install-recommends apt-utils build-essential python make g++ avahi-daemon avahi-discover libnss-mdns libavahi-compat-libdnssd-dev sudo
 
 # Add jessie back ports
 #RUN echo 'deb http://ftp.nl.debian.org/debian jessie-backports main' >> /etc/apt/sources.list
