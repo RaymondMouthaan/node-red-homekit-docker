@@ -15,4 +15,4 @@ done
 echo "Starting Avahi daemon"
 gosu root service avahi-daemon restart
 
-#npm start -- --userDir /data
+npm start -- --userDir /data

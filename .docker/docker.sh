@@ -41,7 +41,7 @@ docker_prepare() {
 docker_build() {
     # Build all images
     echo "DOCKER BUILD: Build all docker images."
-    # docker build --no-cache --build-arg NODE_RED_IMAGE_TAG=$NODE_RED_VERSION-alpine-amd64   --build-arg QEMU_ARCH=x86_64 --file ./.docker/Dockerfile.alpine-tmpl --tag $IMAGE:build-$NODE_RED_VERSION-alpine-amd64 .
+    docker build --no-cache --build-arg NODE_RED_IMAGE_TAG=$NODE_RED_VERSION-alpine-amd64   --build-arg QEMU_ARCH=x86_64 --file ./.docker/Dockerfile.alpine-tmpl --tag $IMAGE:build-$NODE_RED_VERSION-alpine-amd64 .
     docker build --no-cache --build-arg NODE_RED_IMAGE_TAG=$NODE_RED_VERSION-debian-arm32v7 --build-arg QEMU_ARCH=arm    --file ./.docker/Dockerfile.debian-tmpl --tag $IMAGE:build-$NODE_RED_VERSION-debian-arm32v7 .
     # docker build --no-cache --build-arg NODE_RED_VERSION=v$NODE_RED_VERSION --build-arg ARCH=arm64v8 --build-arg NODE_IMAGE_TAG=8-alpine  --build-arg QEMU_ARCH=aarch64 --file ./.docker/Dockerfile.alpine-tmpl --tag $IMAGE:build-8-alpine-arm64v8 .
 }
@@ -50,12 +50,12 @@ docker_test() {
     # Test all images
     echo "DOCKER TEST: Test all docker images."
 
-    # docker run -d --name=test-$NODE_RED_VERSION-alpine-amd64 $IMAGE:build-$NODE_RED_VERSION-alpine-amd64
-    # if [ $? -ne 0 ]; then
-    #    echo "ERROR: Docker container failed to start for build-$NODE_RED_VERSION-alpine-amd64."
-    #    exit 1
-    # fi
-    # docker stop test-$NODE_RED_VERSION-alpine-amd64 && docker rm test-$NODE_RED_VERSION-alpine-amd64
+    docker run -d --name=test-$NODE_RED_VERSION-alpine-amd64 $IMAGE:build-$NODE_RED_VERSION-alpine-amd64
+    if [ $? -ne 0 ]; then
+       echo "ERROR: Docker container failed to start for build-$NODE_RED_VERSION-alpine-amd64."
+       exit 1
+    fi
+    docker stop test-$NODE_RED_VERSION-alpine-amd64 && docker rm test-$NODE_RED_VERSION-alpine-amd64
 
     docker run -d --name=test-$NODE_RED_VERSION-debian-arm32v7 $IMAGE:build-$NODE_RED_VERSION-debian-arm32v7
     if [ $? -ne 0 ]; then
@@ -68,8 +68,8 @@ docker_test() {
 docker_tag() {
     # Tag all images
     echo "DOCKER TAG: Tag all docker images."
-    # docker tag $IMAGE:build-$NODE_RED_VERSION-alpine-amd64 $IMAGE:latest-$NODE_RED_VERSION-alpine-amd64
-    # docker tag $IMAGE:build-$NODE_RED_VERSION-alpine-amd64 $IMAGE:$NODE_RED_HOMEKIT_VERSION-$NODE_RED_VERSION-alpine-amd64
+    docker tag $IMAGE:build-$NODE_RED_VERSION-alpine-amd64 $IMAGE:latest-$NODE_RED_VERSION-alpine-amd64
+    docker tag $IMAGE:build-$NODE_RED_VERSION-alpine-amd64 $IMAGE:$NODE_RED_HOMEKIT_VERSION-$NODE_RED_VERSION-alpine-amd64
 
     docker tag $IMAGE:build-$NODE_RED_VERSION-debian-arm32v7 $IMAGE:latest-$NODE_RED_VERSION-debian-arm32v7
     docker tag $IMAGE:build-$NODE_RED_VERSION-debian-arm32v7 $IMAGE:$NODE_RED_HOMEKIT_VERSION-$NODE_RED_VERSION-debian-arm32v7
@@ -78,8 +78,8 @@ docker_tag() {
 docker_push() {
     # Push all images
     echo "DOCKER PUSH: Push all docker images."
-    # docker push $IMAGE:latest-$NODE_RED_VERSION-alpine-amd64
-    # docker push $IMAGE:$NODE_RED_HOMEKIT_VERSION-$NODE_RED_VERSION-alpine-amd64
+    docker push $IMAGE:latest-$NODE_RED_VERSION-alpine-amd64
+    docker push $IMAGE:$NODE_RED_HOMEKIT_VERSION-$NODE_RED_VERSION-alpine-amd64
 
     docker push $IMAGE:latest-$NODE_RED_VERSION-debian-arm32v7
     docker push $IMAGE:$NODE_RED_HOMEKIT_VERSION-$NODE_RED_VERSION-debian-arm32v7
@@ -96,7 +96,7 @@ docker_manifest_list_version() {
     # Manifest Create NODE_RED_HOMEKIT_VERSION default
     echo "DOCKER MANIFEST: Create and Push docker manifest list - $NODE_RED_HOMEKIT_VERSION."
     docker manifest create $IMAGE:$NODE_RED_HOMEKIT_VERSION \
-        # $IMAGE:$NODE_RED_HOMEKIT_VERSION-$NODE_RED_VERSION-alpine-amd64 \
+        $IMAGE:$NODE_RED_HOMEKIT_VERSION-$NODE_RED_VERSION-alpine-amd64 \
         $IMAGE:$NODE_RED_HOMEKIT_VERSION-$NODE_RED_VERSION-debian-arm32v7
 
     # Manifest Annotate NODE_RED_VERSION
@@ -110,7 +110,7 @@ docker_manifest_list_latest() {
     # Manifest Create latest
     echo "DOCKER MANIFEST: Create and Push docker manifest list - latest."
     docker manifest create $IMAGE:latest \
-        # $IMAGE:latest-$NODE_RED_VERSION-alpine-amd64 \
+        $IMAGE:latest-$NODE_RED_VERSION-alpine-amd64 \
         $IMAGE:latest-$NODE_RED_VERSION-debian-arm32v7
         # $IMAGE:latest-8-alpine-arm64v8
 

@@ -1,16 +1,28 @@
 ARG NODE_RED_IMAGE_TAG
 FROM raymondmm/node-red:$NODE_RED_IMAGE_TAG
+
 LABEL maintainer="Raymond M Mouthaan <raymondmmouthaan@gmail.com>"
 
 ARG QEMU_ARCH
 ARG NODE_RED_IMAGE_TAG
 ENV HOST_NAME myhostname
 ENV NODE_RED_IMAGE_TAG $NODE_RED_IMAGE_TAG
-
 ENV DEBIAN_FRONTEND noninteractive
 
 USER root
 COPY tmp/qemu-$QEMU_ARCH-static /usr/bin/qemu-$QEMU_ARCH-static
+
+# Install required
+RUN apt-get update -y && apt-get install -y --no-install-recommends \
+    apt-utils \
+    build-essential \
+    python \
+    make \
+    g++ \
+    avahi-daemon \
+    avahi-discover \
+    libnss-mdns \
+    libavahi-compat-libdnssd-dev
 
 # Install gosu
 ENV GOSU_VERSION 1.10
@@ -26,26 +38,18 @@ RUN set -x \
        || gpg --keyserver keyserver.pgp.com --recv-keys $GPG_KEY \
     && gpg --batch --verify /usr/local/bin/gosu.asc /usr/local/bin/gosu \
     && rm -rf "$GNUPGHOME" /usr/local/bin/gosu.asc \
-    && chmod +x /usr/local/bin/gosu
-
-RUN chown root:node-red /usr/local/bin/gosu && chmod +s /usr/local/bin/gosu
-
-RUN apt-get update -y && apt-get install -y --no-install-recommends apt-utils build-essential python make g++ avahi-daemon avahi-discover libnss-mdns libavahi-compat-libdnssd-dev
-
-# Add jessie back ports
-#RUN echo 'deb http://ftp.nl.debian.org/debian jessie-backports main' >> /etc/apt/sources.list
-#RUN apt-get update -y && apt-get -t jessie-backports install -y --no-install-recommends gosu
+    && chmod +x /usr/local/bin/gosu \
+    && chown root:node-red /usr/local/bin/gosu && chmod +s /usr/local/bin/gosu
 
 RUN mkdir -p /var/run/dbus && mkdir -p /var/run/avahi-daemon
 RUN chown messagebus:messagebus /var/run/dbus && chown avahi:avahi /var/run/avahi-daemon && dbus-uuidgen --ensure
 
 COPY entrypoint.debian /usr/src/node-red/entrypoint.sh
 RUN chmod 755 /usr/src/node-red/entrypoint.sh
-ENTRYPOINT ["/usr/src/node-red/entrypoint.sh"]
 
 USER node-red
 #RUN npm install node-red-contrib-homekit
 #RUN npm install @boneskull/node-red-contrib-homekit
 RUN npm install node-red-contrib-homekit-bridged
 
-CMD ["npm", "start", "--", "--userDir", "/data"]
+ENTRYPOINT ["/usr/src/node-red/entrypoint.sh"]
