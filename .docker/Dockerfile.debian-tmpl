@@ -9,6 +9,8 @@ ENV NODE_RED_IMAGE_TAG $NODE_RED_IMAGE_TAG
 ENV GOSU_VERSION 1.10
 ENV DEBIAN_FRONTEND noninteractive
 
+USER root
+
 COPY tmp/qemu-$QEMU_ARCH-static /usr/bin/qemu-$QEMU_ARCH-static
 
 #RUN set -ex; \
