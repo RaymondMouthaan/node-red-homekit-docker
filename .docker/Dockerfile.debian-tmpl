@@ -5,6 +5,8 @@ LABEL maintainer="Raymond M Mouthaan <raymondmmouthaan@gmail.com>"
 
 ARG QEMU_ARCH
 ARG NODE_RED_IMAGE_TAG
+ARG NODE_RED_HOMEKIT_VERSION
+
 ENV HOST_NAME myhostname
 ENV NODE_RED_IMAGE_TAG $NODE_RED_IMAGE_TAG
 ENV DEBIAN_FRONTEND noninteractive
@@ -12,11 +14,8 @@ ENV DEBIAN_FRONTEND noninteractive
 USER root
 COPY tmp/qemu-$QEMU_ARCH-static /usr/bin/qemu-$QEMU_ARCH-static
 
-# Install required
+# Install required packages
 RUN apt-get update -y && apt-get install -y --no-install-recommends \
-    apt-utils \
-    build-essential \
-    python \
     make \
     g++ \
     avahi-daemon \
@@ -50,6 +49,10 @@ RUN chmod 755 /usr/src/node-red/entrypoint.sh
 USER node-red
 #RUN npm install node-red-contrib-homekit
 #RUN npm install @boneskull/node-red-contrib-homekit
-RUN npm install node-red-contrib-homekit-bridged
+RUN npm install node-red-contrib-homekit-bridged@$NODE_RED_HOMEKIT_VERSION
+
+# Cleanup
+RUN gosu root apt-get purge -y make g++ && \
+    gosu root apt-get autoremove -y
 
 ENTRYPOINT ["/usr/src/node-red/entrypoint.sh"]

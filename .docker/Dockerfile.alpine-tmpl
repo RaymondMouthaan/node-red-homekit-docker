@@ -1,9 +1,12 @@
 ARG NODE_RED_IMAGE_TAG
 FROM raymondmm/node-red:$NODE_RED_IMAGE_TAG
+
 LABEL maintainer="Raymond M Mouthaan <raymondmmouthaan@gmail.com>"
 
 ARG QEMU_ARCH
 ARG NODE_RED_IMAGE_TAG
+ARG NODE_RED_HOMEKIT_VERSION
+
 ENV HOST_NAME myhostname
 ENV NODE_RED_IMAGE_TAG $NODE_RED_IMAGE_TAG
 
@@ -11,23 +14,27 @@ USER root
 COPY tmp/qemu-$QEMU_ARCH-static /usr/bin/qemu-$QEMU_ARCH-static
 
 # Install required packages
-RUN apk add --no-cache git python make g++ avahi-compat-libdns_sd avahi-dev dbus su-exec
+RUN apk add --no-cache \
+    git \
+    python \
+    make \
+    g++ \
+    avahi-compat-libdns_sd \
+    avahi-dev \
+    dbus \
+    su-exec
 
 RUN mkdir -p /var/run/dbus && mkdir -p /var/run/avahi-daemon
 RUN chown messagebus:messagebus /var/run/dbus && chown avahi:avahi /var/run/avahi-daemon && dbus-uuidgen --ensure
 
 RUN chown root:node-red /sbin/su-exec && chmod +s /sbin/su-exec
 
+COPY entrypoint.alpine /usr/src/node-red/entrypoint.sh
+RUN root chmod 755 /usr/src/node-red/entrypoint.sh
+
 USER node-red
 #RUN npm install node-red-contrib-homekit
 #RUN npm install @boneskull/node-red-contrib-homekit
-RUN npm install node-red-contrib-homekit-bridged
-
-# Clean up
-#RUN su-exec root apk del git python make g++ && \
-#    su-exec root rm -rf /var/cache/apk/*
-
-COPY entrypoint.alpine /usr/src/node-red/entrypoint.sh
-RUN su-exec root chmod 755 /usr/src/node-red/entrypoint.sh
+RUN npm install node-red-contrib-homekit-bridged@$NODE_RED_HOMEKIT_VERSION
 
 ENTRYPOINT /usr/src/node-red/entrypoint.sh
