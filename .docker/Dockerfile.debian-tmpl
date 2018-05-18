@@ -52,7 +52,7 @@ USER node-red
 RUN npm install node-red-contrib-homekit-bridged@$NODE_RED_HOMEKIT_VERSION
 
 # Cleanup
-RUN gosu root apt-get purge -y make g++ && \
-    gosu root apt-get autoremove -y
+#RUN gosu root apt-get purge -y make g++ && \
+#    gosu root apt-get autoremove -y
 
 ENTRYPOINT ["/usr/src/node-red/entrypoint.sh"]
