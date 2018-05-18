@@ -11,7 +11,7 @@ ENV DEBIAN_FRONTEND noninteractive
 
 USER root
 
-COPY tmp/qemu-$QEMU_ARCH-static /usr/bin/qemu-$QEMU_ARCH-static
+#COPY tmp/qemu-$QEMU_ARCH-static /usr/bin/qemu-$QEMU_ARCH-static
 
 RUN set -ex; \
 	\
