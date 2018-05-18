@@ -9,7 +9,6 @@ ENV NODE_RED_IMAGE_TAG $NODE_RED_IMAGE_TAG
 ENV GOSU_VERSION 1.10
 ENV DEBIAN_FRONTEND noninteractive
 
-USER root
 COPY tmp/qemu-$QEMU_ARCH-static /usr/bin/qemu-$QEMU_ARCH-static
 
 #RUN set -ex; \
@@ -37,10 +36,9 @@ COPY tmp/qemu-$QEMU_ARCH-static /usr/bin/qemu-$QEMU_ARCH-static
 #        gosu nobody true; \
 #        \
 #        apt-get purge -y --auto-remove $fetchDeps
-
 #RUN chown root:node-red /usr/local/bin/gosu && chmod +s /usr/local/bin/gosu
 
-RUN apt-get update -y && apt-get install -y --no-install-recommends apt-utils build-essential python make g++ avahi-daemon avahi-discover libnss-mdns libavahi-compat-libdnssd-dev sudo
+RUN apt-get update -y && apt-get install -y --no-install-recommends apt-utils build-essential python make g++ avahi-daemon avahi-discover libnss-mdns libavahi-compat-libdnssd-dev
 
 # Add jessie back ports
 #RUN echo 'deb http://ftp.nl.debian.org/debian jessie-backports main' >> /etc/apt/sources.list
@@ -49,12 +47,13 @@ RUN apt-get update -y && apt-get install -y --no-install-recommends apt-utils bu
 RUN mkdir -p /var/run/dbus && mkdir -p /var/run/avahi-daemon
 RUN chown messagebus:messagebus /var/run/dbus && chown avahi:avahi /var/run/avahi-daemon && dbus-uuidgen --ensure
 
+COPY entrypoint.debian /usr/src/node-red/entrypoint.sh
+RUN chmod 755 /usr/src/node-red/entrypoint.sh
+ENTRYPOINT ["/usr/src/node-red/entrypoint.sh"]
+
 USER node-red
 #RUN npm install node-red-contrib-homekit
 #RUN npm install @boneskull/node-red-contrib-homekit
 RUN npm install node-red-contrib-homekit-bridged
 
-COPY entrypoint.debian /usr/src/node-red/entrypoint.sh
-RUN sudo chmod 755 /usr/src/node-red/entrypoint.sh
-
-ENTRYPOINT /usr/src/node-red/entrypoint.sh
+CMD ["npm", "start", "--", "--userDir", "/data"]
