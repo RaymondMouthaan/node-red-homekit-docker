@@ -51,8 +51,11 @@ USER node-red
 #RUN npm install @boneskull/node-red-contrib-homekit
 RUN npm install node-red-contrib-homekit-bridged@$NODE_RED_HOMEKIT_VERSION
 
-# Cleanup
-RUN gosu root apt-get purge -y make g++
-RUN gosu root apt-get autoremove -y
+# Reduce image size by removing files that are used only for building the image
+USER root
+RUN apt-get remove -y make g++ && \
+    apt-get autoremove -y && \
+    rm -rf /var/lib/apt/lists/*
 
+USER node-red
 ENTRYPOINT ["/usr/src/node-red/entrypoint.sh"]
