@@ -14,15 +14,14 @@ USER root
 COPY tmp/qemu-$QEMU_ARCH-static /usr/bin/qemu-$QEMU_ARCH-static
 
 # Install required packages
-RUN apk add --no-cache \
-    git \
-    python \
+RUN apk add --update \
     make \
     g++ \
     avahi-compat-libdns_sd \
     avahi-dev \
     dbus \
-    su-exec
+    su-exec \
+    && rm -rf /var/cache/apk/*
 
 RUN mkdir -p /var/run/dbus && mkdir -p /var/run/avahi-daemon
 RUN chown messagebus:messagebus /var/run/dbus && chown avahi:avahi /var/run/avahi-daemon && dbus-uuidgen --ensure
@@ -36,5 +35,8 @@ USER node-red
 #RUN npm install node-red-contrib-homekit
 #RUN npm install @boneskull/node-red-contrib-homekit
 RUN npm install node-red-contrib-homekit-bridged@$NODE_RED_HOMEKIT_VERSION
+
+# Cleanup
+RUN su-exec root apk del make g++
 
 ENTRYPOINT /usr/src/node-red/entrypoint.sh
