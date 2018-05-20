@@ -32,9 +32,12 @@ COPY entrypoint.alpine /usr/src/node-red/entrypoint.sh
 RUN chmod 755 /usr/src/node-red/entrypoint.sh
 
 USER node-red
+# package.json contains Node-RED NPM module and node dependencies
+COPY package.json /usr/src/node-red/
+
 #RUN npm install node-red-contrib-homekit
 #RUN npm install @boneskull/node-red-contrib-homekit
-RUN npm install node-red-contrib-homekit-bridged@$NODE_RED_HOMEKIT_VERSION
+#RUN npm install node-red-contrib-homekit-bridged@$NODE_RED_HOMEKIT_VERSION
 
 # Cleanup
 RUN su-exec root apk del make g++
