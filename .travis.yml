@@ -8,11 +8,9 @@ language:
 
 env:
   global:
-    - NODE_RED_HOMEKIT_VERSION=0.3.6
-    - NODE_RED_VERSION=0.18.5-8
+    - BASE_IMAGE_NODE_RED_VERSION=0.18.5-8
     - IMAGE=raymondmm/node-red-homekit
     - QEMU_VERSION=v2.11.1
-    - MAKEFLAGS="-j 2"
 
 before_install:
   - ./update_version.sh
