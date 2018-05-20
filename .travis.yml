@@ -20,7 +20,6 @@ before_install:
   - ./.docker/docker.sh build
 
 script:
-  #- ./update.sh $NODE_RED_VERSION
   - ./.docker/docker.sh test
 
 after_success:

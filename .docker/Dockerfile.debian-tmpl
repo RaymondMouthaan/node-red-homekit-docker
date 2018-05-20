@@ -18,6 +18,7 @@ COPY tmp/qemu-$QEMU_ARCH-static /usr/bin/qemu-$QEMU_ARCH-static
 RUN apt-get update -y && apt-get install -y --no-install-recommends \
     make \
     g++ \
+    python \
     avahi-daemon \
     avahi-discover \
     libnss-mdns \
@@ -47,9 +48,9 @@ COPY entrypoint.debian /usr/src/node-red/entrypoint.sh
 RUN chmod 755 /usr/src/node-red/entrypoint.sh
 
 USER node-red
-#RUN npm install node-red-contrib-homekit
-#RUN npm install @boneskull/node-red-contrib-homekit
-RUN npm install node-red-contrib-homekit-bridged@$NODE_RED_HOMEKIT_VERSION
+# package.json contains Node-RED NPM module and node dependencies
+COPY package.json /usr/src/node-red/
+RUN npm install
 
 # Reduce image size by removing files that are used only for building the image
 USER root

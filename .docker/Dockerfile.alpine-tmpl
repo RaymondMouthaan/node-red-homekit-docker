@@ -17,6 +17,7 @@ COPY tmp/qemu-$QEMU_ARCH-static /usr/bin/qemu-$QEMU_ARCH-static
 RUN apk add --update \
     make \
     g++ \
+    python \
     avahi-compat-libdns_sd \
     avahi-dev \
     dbus \
@@ -34,12 +35,9 @@ RUN chmod 755 /usr/src/node-red/entrypoint.sh
 USER node-red
 # package.json contains Node-RED NPM module and node dependencies
 COPY package.json /usr/src/node-red/
-
-#RUN npm install node-red-contrib-homekit
-#RUN npm install @boneskull/node-red-contrib-homekit
 RUN npm install
 
-# Cleanup
+# Reduce image size by removing files that are used only for building the image
 RUN su-exec root apk del make g++
 
 ENTRYPOINT /usr/src/node-red/entrypoint.sh
