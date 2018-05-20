@@ -43,3 +43,25 @@ docker run -d --network host -e HOST_NAME=$HOSTNAME --name myhomekit raymondmm/n
 ```
 
 By default Node-RED runs on port 1880, so after deploying the node-red-homekit container it listens on port 1880. Open up a browser to `http://<your_server>:1880`, which opens the node-red web interface.
+
+### Persistent (recommended)
+Persistence is recommended to use, so one doesn't loose it's node-red data (flows etc) after a restart of the container. Follow the steps to persist the node-red data directory outside the container.
+
+The Node-RED runs as user node-red. This user inside the container has uid 1001, which means this user needs write-access to `<path_on_your_host>`. To add a user with uid 1001 on the host, use:
+
+```
+sudo adduser --uid 1001 --no-create-home --disabled-password node-red
+```
+
+This command creates a user node-red on the host with uid 1001 without a home directory and without password.
+
+The following two commands create a directory on the host and sets the ownership to user node-red:
+```
+mkdir <path_on_your_host>
+chown -R node-red:node-red <path_on_your_host>
+```
+
+With this setup, one can execute the following command:
+```
+docker run -d --network host -e HOST_NAME=$HOSTNAME -v <path_on_your_host>:/data --name node-red-homekit raymondmm/node-red-homekit
+```
