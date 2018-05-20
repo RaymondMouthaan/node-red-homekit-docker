@@ -11,6 +11,8 @@ env:
     - BASE_IMAGE_NODE_RED_VERSION=0.18.5-8
     - IMAGE=raymondmm/node-red-homekit
     - QEMU_VERSION=v2.11.1
+    - NODE_RED_VERSION=x.y.z
+    - NODE_RED_HOMEKIT_VERSION=x.y.z
 
 before_install:
   - ./update_version.sh
