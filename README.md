@@ -1,7 +1,6 @@
 # Node-RED-homekit-docker
 
 [![Greenkeeper badge](https://badges.greenkeeper.io/RaymondMouthaan/node-red-homekit-docker.svg)](https://greenkeeper.io/)
-
 [![Build Status](https://travis-ci.org/RaymondMouthaan/node-red-homekit-docker.svg?branch=master)](https://travis-ci.org/RaymondMouthaan/node-red-homekit-docker)
 [![DockerHub Pull](https://img.shields.io/docker/pulls/raymondmm/node-red-homekit.svg)](https://hub.docker.com/r/raymondmm/node-red-homekit/)
 
