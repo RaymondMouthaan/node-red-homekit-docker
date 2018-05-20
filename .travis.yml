@@ -15,6 +15,7 @@ env:
     - MAKEFLAGS="-j 2"
 
 before_install:
+  - ./update_version.sh
   - ./.docker/docker.sh prepare
   - ./.docker/docker.sh build
 
