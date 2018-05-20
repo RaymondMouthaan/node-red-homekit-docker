@@ -37,7 +37,7 @@ COPY package.json /usr/src/node-red/
 
 #RUN npm install node-red-contrib-homekit
 #RUN npm install @boneskull/node-red-contrib-homekit
-#RUN npm install node-red-contrib-homekit-bridged@$NODE_RED_HOMEKIT_VERSION
+RUN npm install
 
 # Cleanup
 RUN su-exec root apk del make g++
