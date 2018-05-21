@@ -147,7 +147,8 @@ update_docker_configuration() {
     "max-concurrent-uploads": 50
   }' | sudo tee /etc/docker/daemon.json
 
-  sudo service docker restart
+  #sudo service docker restart
+  docker manifest
 }
 
 prepare_qemu(){
