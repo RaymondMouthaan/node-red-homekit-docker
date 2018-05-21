@@ -88,27 +88,6 @@ docker_manifest_list() {
     docker_manifest_list_version_os_arch
 }
 
-docker_manifest_list_version_os_arch() {
-    # Manifest Create alpine-amd64
-    echo "DOCKER MANIFEST: Create and Push docker manifest list - $IMAGE:$NODE_RED_HOMEKIT_VERSION-$NODE_RED_VERSION-alpine-amd64."
-    docker manifest create $IMAGE:$NODE_RED_HOMEKIT_VERSION-$NODE_RED_VERSION-alpine-amd64 \
-        $IMAGE:$NODE_RED_HOMEKIT_VERSION-$NODE_RED_VERSION-alpine-amd64
-
-    # Manifest push alpine-amd64
-    docker manifest push $IMAGE:$NODE_RED_HOMEKIT_VERSION-$NODE_RED_VERSION-alpine-amd64
-
-    # Manifest Create debian-arm32v7
-    echo "DOCKER MANIFEST: Create and Push docker manifest list - $IMAGE:$NODE_RED_HOMEKIT_VERSION-$NODE_RED_VERSION-debian-arm32v7."
-    docker manifest create $IMAGE:$NODE_RED_HOMEKIT_VERSION-$NODE_RED_VERSION-debian-arm32v7 \
-        $IMAGE:$NODE_RED_HOMEKIT_VERSION-$NODE_RED_VERSION-debian-arm32v7
-
-    # Manifest Annotate debian-arm32v7
-    docker manifest annotate $IMAGE:$NODE_RED_HOMEKIT_VERSION-$NODE_RED_VERSION-debian-arm32v7 $IMAGE:$NODE_RED_HOMEKIT_VERSION-$NODE_RED_VERSION-debian-arm32v7 --os=linux --arch=arm --variant=v7
-
-    # Manifest push debian-arm32v7
-    docker manifest push $IMAGE:$NODE_RED_HOMEKIT_VERSION-$NODE_RED_VERSION-debian-arm32v7
-}
-
 docker_manifest_list_version() {
     # Manifest Create NODE_RED_HOMEKIT_VERSION
     echo "DOCKER MANIFEST: Create and Push docker manifest list - $IMAGE:$NODE_RED_HOMEKIT_VERSION."
@@ -136,6 +115,27 @@ docker_manifest_list_latest() {
 
     # Manifest Push latest
     docker manifest push $IMAGE:latest
+}
+
+docker_manifest_list_version_os_arch() {
+    # Manifest Create alpine-amd64
+    echo "DOCKER MANIFEST: Create and Push docker manifest list - $IMAGE:$NODE_RED_HOMEKIT_VERSION-$NODE_RED_VERSION-alpine-amd64."
+    docker manifest create $IMAGE:$NODE_RED_HOMEKIT_VERSION-$NODE_RED_VERSION-alpine-amd64 \
+        $IMAGE:$NODE_RED_HOMEKIT_VERSION-$NODE_RED_VERSION-alpine-amd64
+
+    # Manifest push alpine-amd64
+    docker manifest push $IMAGE:$NODE_RED_HOMEKIT_VERSION-$NODE_RED_VERSION-alpine-amd64
+
+    # Manifest Create debian-arm32v7
+    echo "DOCKER MANIFEST: Create and Push docker manifest list - $IMAGE:$NODE_RED_HOMEKIT_VERSION-$NODE_RED_VERSION-debian-arm32v7."
+    docker manifest create $IMAGE:$NODE_RED_HOMEKIT_VERSION-$NODE_RED_VERSION-debian-arm32v7 \
+        $IMAGE:$NODE_RED_HOMEKIT_VERSION-$NODE_RED_VERSION-debian-arm32v7
+
+    # Manifest Annotate debian-arm32v7
+    docker manifest annotate $IMAGE:$NODE_RED_HOMEKIT_VERSION-$NODE_RED_VERSION-debian-arm32v7 $IMAGE:$NODE_RED_HOMEKIT_VERSION-$NODE_RED_VERSION-debian-arm32v7 --os=linux --arch=arm --variant=v7
+
+    # Manifest push debian-arm32v7
+    docker manifest push $IMAGE:$NODE_RED_HOMEKIT_VERSION-$NODE_RED_VERSION-debian-arm32v7
 }
 
 setup_dependencies() {
