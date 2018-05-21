@@ -83,9 +83,9 @@ docker_push() {
 docker_manifest_list() {
     # Create and push manifest lists, displayed as FIFO
     echo "DOCKER MANIFEST: Create and Push docker manifest lists."
-    docker_manifest_list_version_os_arch
     docker_manifest_list_version
     docker_manifest_list_latest
+    docker_manifest_list_version_os_arch
 }
 
 docker_manifest_list_version_os_arch() {
