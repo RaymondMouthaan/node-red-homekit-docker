@@ -17,7 +17,6 @@ env:
 before_install:
   - . ./update_version.sh
   - ./.docker/docker.sh prepare
-  - echo "$NODE_RED_VERSION - $NODE_RED_HOMEKIT_VERSION"
   - ./.docker/docker.sh build
 
 script:
