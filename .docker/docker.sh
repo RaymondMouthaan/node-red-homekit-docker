@@ -146,9 +146,6 @@ update_docker_configuration() {
     "max-concurrent-downloads": 50,
     "max-concurrent-uploads": 50
   }' | sudo tee /etc/docker/daemon.json
-
-  #sudo service docker restart
-  docker manifest
 }
 
 prepare_qemu(){
