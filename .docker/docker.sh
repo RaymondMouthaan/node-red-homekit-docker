@@ -104,7 +104,7 @@ docker_manifest_list_version() {
     echo "DOCKER MANIFEST: Create and Push docker manifest list - $IMAGE:$NODE_RED_HOMEKIT_VERSION."
     docker manifest create $IMAGE:$NODE_RED_HOMEKIT_VERSION \
         $IMAGE:$NODE_RED_HOMEKIT_VERSION-$NODE_RED_VERSION-alpine-amd64 \
-        $IMAGE:$NODE_RED_HOMEKIT_VERSION-$NODE_RED_VERSION-debian-arm32v7
+        $IMAGE:$NODE_RED_HOMEKIT_VERSION-$NODE_RED_VERSION-debian-arm32v7 \
         $IMAGE:$NODE_RED_HOMEKIT_VERSION-$NODE_RED_VERSION-alpine-arm64v8
 
     # Manifest Annotate NODE_RED_HOMEKIT_VERSION
