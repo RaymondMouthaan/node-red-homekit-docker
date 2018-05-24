@@ -7,9 +7,10 @@
 Node-RED-homekit is a Node-RED based project with support for homekit. It contains the necessary tools to run homekit within a docker container and has the npm module [node-red-contrib-homekit-bridged](https://www.npmjs.com/package/node-red-contrib-homekit-bridged) installed.
 
 ## Architecture
-Currently Node-RED-homekit has support for multiple architectures, which are:
+Currently Node-RED-homekit has support for multiple architectures:
 - amd64 : based on linux Alpine (i.e. Synology NAS)
 - arm32v7 : based on linux Debian - (i.e. Raspberry PI3)
+- arm64v8 : based on linux Alpine - (i.e. Pine64)
 
 ## Usage
 Some basic familiarity with Docker and the [Docker Command Line](https://docs.docker.com/engine/reference/commandline/cli/) is assumed.
@@ -66,3 +67,6 @@ With this setup, one can execute the following command:
 ```
 docker run -d --network host -e HOST_NAME=$HOSTNAME -v <path_on_your_host>:/data --name node-red-homekit raymondmm/node-red-homekit
 ```
+
+### Stack
+Todo
