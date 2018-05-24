@@ -1,16 +1,16 @@
 # Node-RED-homekit-docker
-
 [![Greenkeeper badge](https://badges.greenkeeper.io/RaymondMouthaan/node-red-homekit-docker.svg)](https://greenkeeper.io/)
 [![Build Status](https://travis-ci.org/RaymondMouthaan/node-red-homekit-docker.svg?branch=master)](https://travis-ci.org/RaymondMouthaan/node-red-homekit-docker)
 [![DockerHub Pull](https://img.shields.io/docker/pulls/raymondmm/node-red-homekit.svg)](https://hub.docker.com/r/raymondmm/node-red-homekit/)
+[![DockerHub Star](https://img.shields.io/docker/stars/raymondmm/node-red-homekit.svg?maxAge=2592000)](https://hub.docker.com/r/raymondmm/node-red-homekit/)
 
 Node-RED-homekit is a Node-RED based project with support for homekit. It contains the necessary tools to run homekit within a docker container and has the npm module [node-red-contrib-homekit-bridged](https://www.npmjs.com/package/node-red-contrib-homekit-bridged) installed.
 
 ## Architecture
 Currently Node-RED-homekit has support for multiple architectures:
-- amd64 : based on linux Alpine (i.e. Synology NAS)
-- arm32v7 : based on linux Debian - (i.e. Raspberry PI3)
-- arm64v8 : based on linux Alpine - (i.e. Pine64)
+- `amd64` : based on linux Alpine - for most desktop computer (e.g. x64, x86-64, x86_64)
+- `arm32v7` : based on linux Debian - (i.e. Raspberry PI3)
+- `arm64v8` : based on linux Alpine - (i.e. Pine64)
 
 ## Usage
 Some basic familiarity with Docker and the [Docker Command Line](https://docs.docker.com/engine/reference/commandline/cli/) is assumed.

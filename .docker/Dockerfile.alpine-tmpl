@@ -37,7 +37,9 @@ USER node-red
 COPY package.json /usr/src/node-red/
 RUN npm install
 
+USER root
 # Reduce image size by removing files that are used only for building the image
-RUN su-exec root apk del make g++
+RUN apk del make g++
 
+USER node-red
 ENTRYPOINT /usr/src/node-red/entrypoint.sh
