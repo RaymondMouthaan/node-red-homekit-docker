@@ -10,8 +10,8 @@ env:
   global:
     - BASE_IMAGE_NODE_RED_VERSION=0.18.5-8
     - IMAGE=raymondmm/node-red-homekit
-    #- QEMU_VERSION=v2.12.0
-    - QEMU_VERSION=v2.9.1-1
+    - QEMU_VERSION=v2.12.0
+    #- QEMU_VERSION=v2.9.1-1
     - NODE_RED_VERSION=x.y.z
     - NODE_RED_HOMEKIT_VERSION=x.y.z
 
