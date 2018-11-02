@@ -12,6 +12,11 @@ ENV NODE_RED_IMAGE_TAG $NODE_RED_IMAGE_TAG
 ENV DEBIAN_FRONTEND noninteractive
 
 USER root
+
+# Remove qemu-*-static from base image if exists
+RUN if [ -f /usr/bin/qemu-*-static ]; then rm -rf /usr/bin/qemu-*-static; fi
+
+# Copy qemu-*-static
 COPY tmp/qemu-$QEMU_ARCH-static /usr/bin/qemu-$QEMU_ARCH-static
 
 # Install required packages
