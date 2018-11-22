@@ -93,7 +93,7 @@ docker_push() {
 }
 
 docker_manifest_list() {
-  echo "DOCKER BUILD: target -> ${BUILD_FROM}."
+  echo "DOCKER BUILD: target -> ${TARGET}."
   echo "DOCKER BUILD: build version -> ${BUILD_VERSION}."
   echo "DOCKER BUILD: node-red version -> ${NODE_RED_VERSION}."
   echo "DOCKER BUILD: node version -> ${NODE_VERSION}."
