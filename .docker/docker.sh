@@ -93,6 +93,12 @@ docker_push() {
 }
 
 docker_manifest_list() {
+  echo "DOCKER BUILD: target -> ${BUILD_FROM}."
+  echo "DOCKER BUILD: build version -> ${BUILD_VERSION}."
+  echo "DOCKER BUILD: node-red version -> ${NODE_RED_VERSION}."
+  echo "DOCKER BUILD: node version -> ${NODE_VERSION}."
+  echo "DOCKER BUILD: node-red-homekit version -> ${NODE_RED_HOMEKIT_VERSION}."
+
   # Create and push manifest lists, displayed as FIFO
   echo "DOCKER MANIFEST: Create and Push docker manifest lists."
   docker_manifest_list_version
