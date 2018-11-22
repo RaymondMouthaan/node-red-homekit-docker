@@ -9,7 +9,6 @@ ARG BUILD_DATE
 ARG BUILD_VERSION
 ARG BUILD_REF
 ARG NODE_RED_VERSION
-ARG NODE_RED_HOMEKIT_VERSION
 ARG NODE_VERSION
 ARG OS
 ARG ARCH
@@ -19,57 +18,44 @@ ARG QEMU_ARCH
 LABEL org.label-schema.build-date=${BUILD_DATE} \
     org.label-schema.docker.dockerfile=".docker/Dockerfile.alpine-tmpl" \
     org.label-schema.license="GNU" \
-    org.label-schema.name="node-red-homekit" \
+    org.label-schema.name="node-red" \
     org.label-schema.version=${BUILD_VERSION} \
     org.label-schema.description="Node-RED is a programming tool for wiring together hardware devices, APIs and online services in new and interesting ways." \
     org.label-schema.url="https://nodered.org" \
     org.label-schema.vcs-ref=${BUILD_REF} \
     org.label-schema.vcs-type="Git" \
-    org.label-schema.vcs-url="https://github.com/RaymondMouthaan/node-red-homekit-docker" \
+    org.label-schema.vcs-url="https://github.com/RaymondMouthaan/node-red-docker" \
     maintainer="Raymond M Mouthaan <raymondmmouthaan@gmail.com>"
 
 COPY tmp/qemu-$QEMU_ARCH-static /usr/bin/qemu-$QEMU_ARCH-static
 
 # Copy ARCHs to ENVs to make them available at runtime
 ENV NODE_RED_VERSION=$NODE_RED_VERSION
-ENV NODE_RED_HOMEKIT_VERSION=$NODE_RED_HOMEKIT_VERSION
 ENV NODE_VERSION=$NODE_VERSION
 ENV OS=$OS
 ENV ARCH=$ARCH
-ENV HOST_NAME myhostname
 
 # Env variables holding file path for flows configuration
 ENV FLOWS=flows.json
 ENV NODE_PATH=/usr/src/node-red/node_modules:/data/node_modules
 
-# Copy entrypoint
-COPY entrypoint.alpine /tmp/entrypoint.sh
-
-# Install tools, create node-red app and data dir, add user and set rights
+# Install tools, data dir, add user and set rights
 RUN set -ex \
-    && apk add --no-cache --virtual .run-deps \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends \
       git \
       openssh-client \
-      make \
-      g++ \
-      python \
-      avahi-compat-libdns_sd \
-      avahi-dev \
-      dbus \
-      su-exec \
-    && rm -rf /var/cache/apk/* \
-    && mkdir -p /usr/src/node-red /data /var/run/dbus /var/run/avahi-daemon \
-    && addgroup -g 1001 -S node-red \
-    && adduser -S -h /usr/src/node-red -u 1001 node-red -G node-red \
-    && chown -Rv node-red:node-red /usr/src/node-red \
-    && chown -R node-red:node-red /data \
-    && chown messagebus:messagebus /var/run/dbus \
-    && chown avahi:avahi /var/run/avahi-daemon \
-    && dbus-uuidgen --ensure \
-    && chown root:node-red /sbin/su-exec \
-    && chmod +s /sbin/su-exec \
-    $$ mv /tmp/entrypoint.sh /usr/src/node-red/entrypoint.sh \
-    && chmod 755 /usr/src/node-red/entrypoint.sh
+    && rm -rf /var/lib/apt/lists/* \
+    && adduser --system --home /usr/src/node-red --uid 1001 --group node-red \
+    && mkdir /data \
+    && chown -Rv node-red:node-red /data
+
+# Add node-red user and group (uid=1001 and gid=1001), so we aren't running as root.
+#RUN adduser --system --home /usr/src/node-red --uid 1001 --group node-red
+
+# User data directory: contains flows, config and nodes.
+#RUN mkdir /data && \
+#    chown -Rv node-red:node-red /data
 
 # Run as node-red user
 USER node-red
@@ -87,4 +73,4 @@ VOLUME ["/data"]
 # Expose the listening port of node-red
 EXPOSE 1880
 
-ENTRYPOINT ["/usr/src/node-red/entrypoint.sh"]
+ENTRYPOINT ["npm", "start", "--", "--userDir", "/data"]

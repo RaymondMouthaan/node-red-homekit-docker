@@ -8,38 +8,67 @@ language:
 
 env:
   global:
-    - BASE_IMAGE_NODE_RED_VERSION=0.19.5-8
-    - IMAGE=raymondmm/node-red-homekit
-    - QEMU_VERSION=v3.0.0
     - NODE_RED_VERSION=x.y.z
+    - TARGET=raymondmm/node-red-homekit
+    - QEMU_VERSION=v3.0.0
     - NODE_RED_HOMEKIT_VERSION=x.y.z
 
+  matrix:
+    - DOCKER_FILE=Dockerfile.alpine-tmpl BUILD_FROM=amd64/node NODE_VERSION=10 OS=alpine QEMU_ARCH=x86_64 ARCH=amd64
+    # - DOCKER_FILE=Dockerfile.alpine-tmpl BUILD_FROM=arm32v6/node NODE_VERSION=10 OS=alpine QEMU_ARCH=arm ARCH=arm32v6
+    # - DOCKER_FILE=Dockerfile.slim-tmpl BUILD_FROM=arm32v7/node NODE_VERSION=10 OS=slim QEMU_ARCH=arm ARCH=arm32v7
+    # - DOCKER_FILE=Dockerfile.alpine-tmpl BUILD_FROM=arm64v8/node NODE_VERSION=10 OS=alpine QEMU_ARCH=aarch64 ARCH=arm64v8
+
 before_install:
-  - . ./update_version.sh
   - ./.docker/docker.sh prepare
-  - ./.docker/docker.sh build
+
+install: true
+
+before_script:
+    # Set BUILD_VERSION
+    - if [ ! -z "${TRAVIS_TAG}" ]; then export BUILD_VERSION=${TRAVIS_TAG:1}; else export BUILD_VERSION=beta; fi
 
 script:
-  - ./.docker/docker.sh test
+  # Update NODE_RED_VERSION from package.json
+  - . ./update_version.sh
 
-after_success:
-  - >
-    if [ "$TRAVIS_BRANCH" == "master" ] && [ "$TRAVIS_PULL_REQUEST" == "false" ]; then
-      # Docker Login
-      echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+  # Build Docker image
+  - ./.docker/docker.sh build
 
-      # Tag all images
-      ./.docker/docker.sh tag
+  # # Test Docker image
+  # - ./.docker/docker.sh test
+  #
+  # # Push Docker image
+  # - >
+  #   if [ ! -z "${TRAVIS_TAG}" ]; then
+  #     # Tag Docker image
+  #     ./.docker/docker.sh tag
+  #
+  #     # Docker Login
+  #     echo "${DOCKER_PASSWORD}" | docker login -u "${DOCKER_USERNAME}" --password-stdin
+  #
+  #     # Push Docker image
+  #     docker push ${TARGET}:${BUILD_VERSION}-${NODE_VERSION}-${OS}-${ARCH}
+  #
+  #     # Docker Logout
+  #     docker logout
+  #   fi
 
-      # Push all images
-      ./.docker/docker.sh push
+jobs:
+    include:
+        - stage: manifest
+          if: tag =~ ^v
+          script:
+              # Create and push Docker manifest lists (TODO move to function)
+              # Docker Login
+              - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
 
-      # Create and push manifest list
-      ./.docker/docker.sh manifest-list
+              # Create and Push Docker Manifest Lists to Docker Hub
+              - echo "Create manifest list for all docker images."
+              - ./.docker/docker.sh manifest-list
 
-      # Docker Logout
-      docker logout
-    fi
+              # Docker Logout
+              - docker logout
 
 # notify me when things fail
 notifications:

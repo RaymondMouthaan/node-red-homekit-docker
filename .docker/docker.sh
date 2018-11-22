@@ -1,4 +1,5 @@
 #!/bin/bash
+
 set -o errexit
 
 main() {
@@ -33,146 +34,222 @@ docker_prepare() {
     # Update docker configuration to enable docker manifest command
     update_docker_configuration
 
-    # Prepare qemu to build non-x86_64 architectures on x86_64
+    # Prepare qemu to build images other then x86_64 on travis
     prepare_qemu
 }
 
 docker_build() {
-    # Build all images
-    echo "DOCKER BUILD: Build all docker images."
-    docker build --build-arg NODE_RED_HOMEKIT_VERSION=$NODE_RED_HOMEKIT_VERSION --build-arg NODE_RED_IMAGE_TAG=$BASE_IMAGE_NODE_RED_VERSION-alpine-amd64   --build-arg QEMU_ARCH=x86_64 --file ./.docker/Dockerfile.alpine-tmpl --tag $IMAGE:build-alpine-amd64 .
-    docker build --build-arg NODE_RED_HOMEKIT_VERSION=$NODE_RED_HOMEKIT_VERSION --build-arg NODE_RED_IMAGE_TAG=$BASE_IMAGE_NODE_RED_VERSION-debian-arm32v7 --build-arg QEMU_ARCH=arm    --file ./.docker/Dockerfile.debian-tmpl --tag $IMAGE:build-debian-arm32v7 .
-    docker build --build-arg NODE_RED_HOMEKIT_VERSION=$NODE_RED_HOMEKIT_VERSION --build-arg NODE_RED_IMAGE_TAG=$BASE_IMAGE_NODE_RED_VERSION-alpine-arm64v8 --build-arg QEMU_ARCH=aarch64  --file ./.docker/Dockerfile.alpine-tmpl --tag $IMAGE:build-alpine-arm64v8 .
+  # Build Docker image
+  echo "DOCKER BUILD: Build Docker image."
+  echo "DOCKER BUILD: build version -> ${BUILD_VERSION}."
+  echo "DOCKER BUILD: build from -> ${BUILD_FROM}."
+  echo "DOCKER BUILD: node version -> ${NODE_VERSION}."
+  echo "DOCKER BUILD: os -> ${OS}."
+  echo "DOCKER BUILD: node-red version -> ${NODE_RED_VERSION}."
+  echo "DOCKER BUILD: node-red-homekit version -> ${NODE_RED_HOMEKIT_VERSION}."
+  echo "DOCKER BUILD: arch - ${ARCH}."
+  echo "DOCKER BUILD: qemu arch - ${QEMU_ARCH}."
+  echo "DOCKER BUILD: docker file - ${DOCKER_FILE}."
+
+  docker build --no-cache \
+    --build-arg BUILD_REF=${TRAVIS_COMMIT} \
+    --build-arg BUILD_DATE=$(date +"%Y-%m-%dT%H:%M:%SZ") \
+    --build-arg BUILD_VERSION=${BUILD_VERSION} \
+    --build-arg BUILD_FROM=${BUILD_FROM} \
+    --build-arg NODE_VERSION=${NODE_VERSION} \
+    --build-arg OS=${OS} \
+    --build-arg NODE_RED_VERSION=v${NODE_RED_VERSION} \
+    --build-arg NODE_RED_HOMEKIT_VERSION=v${NODE_RED_HOMEKIT_VERSION} \
+    --build-arg ARCH=${ARCH} \
+    --build-arg QEMU_ARCH=${QEMU_ARCH} \
+    --file ./.docker/${DOCKER_FILE} \
+    --tag ${TARGET}:build-${NODE_RED_VERSION}-${NODE_VERSION}-${OS}-${ARCH} .
+
 }
 
 docker_test() {
-    # Test all images
-    echo "DOCKER TEST: Test all docker images."
+  echo "DOCKER TEST: Test Docker image."
+  echo "DOCKER TEST: testing image -> ${TARGET}:build-${NODE_VERSION}-${OS}-${ARCH}."
 
-    docker run -d --rm --name=test-alpine-amd64 $IMAGE:build-alpine-amd64
-    if [ $? -ne 0 ]; then
-       echo "DOCKER TEST: FAILED - Docker container failed to start for build-alpine-amd64."
-       exit 1
-    else
-       echo "DOCKER TEST: PASSED - Docker container succeeded to start for build-alpine-amd64."
-    fi
-
-    docker run -d --rm --name=test-debian-arm32v7 $IMAGE:build-debian-arm32v7
-    if [ $? -ne 0 ]; then
-        echo "DOCKER TEST: FAILED - Docker container failed to start for build-debian-arm32v7."
-        exit 1
-    else
-        echo "DOCKER TEST: PASSED - Docker container succeeded to start for build-debian-arm32v7."
-    fi
-
-    docker run -d --rm --name=test-alpine-arm64v8 $IMAGE:build-alpine-arm64v8
-    if [ $? -ne 0 ]; then
-        echo "DOCKER TEST: FAILED - Docker container failed to start for build-alpine-arm64v8."
-        exit 1
-    else
-        echo "DOCKER TEST: PASSED - Docker container succeeded to start for build-alpine-arm64v8."
-    fi
-
+  docker run -d --rm --name=test-${NODE_VERSION}-${ARCH} ${TARGET}:build-${NODE_VERSION}-${OS}-${ARCH}
+  if [ $? -ne 0 ]; then
+     echo "DOCKER TEST: FAILED - Docker container test-${NODE_VERSION}-${OS}-${ARCH} failed to start."
+     exit 1
+  else
+     echo "DOCKER TEST: PASSED - Docker container test-${NODE_VERSION}-${OS}-${ARCH} succeeded to start."
+  fi
 }
 
 docker_tag() {
-    # Tag all images
-    echo "DOCKER TAG: Tag all docker images."
-    docker tag $IMAGE:build-alpine-amd64 $IMAGE:$NODE_RED_HOMEKIT_VERSION-$NODE_RED_VERSION-alpine-amd64
-    docker tag $IMAGE:build-debian-arm32v7 $IMAGE:$NODE_RED_HOMEKIT_VERSION-$NODE_RED_VERSION-debian-arm32v7
-    docker tag $IMAGE:build-alpine-arm64v8 $IMAGE:$NODE_RED_HOMEKIT_VERSION-$NODE_RED_VERSION-alpine-arm64v8
+    echo "DOCKER TAG: Tag Docker image."
+    echo "DOCKER TAG: tagging image - ${TARGET}:${BUILD_VERSION}-${NODE_VERSION}-${OS}-${ARCH}."
+    docker tag ${TARGET}:build-${NODE_VERSION}-${OS}-${ARCH} ${TARGET}:${BUILD_VERSION}-${NODE_VERSION}-${OS}-${ARCH}
 }
 
 docker_push() {
-    # Push all images
-    echo "DOCKER PUSH: Push all docker images."
-    docker push $IMAGE:$NODE_RED_HOMEKIT_VERSION-$NODE_RED_VERSION-alpine-amd64
-    docker push $IMAGE:$NODE_RED_HOMEKIT_VERSION-$NODE_RED_VERSION-debian-arm32v7
-    docker push $IMAGE:$NODE_RED_HOMEKIT_VERSION-$NODE_RED_VERSION-alpine-arm64v8
+  echo "DOCKER PUSH: Push Docker image."
+  echo "DOCKER PUSH: pushing - ${TARGET}:${BUILD_VERSION}-${NODE_VERSION}-${OS}-${ARCH}."
+  docker push ${TARGET}:${BUILD_VERSION}-${NODE_VERSION}-${OS}-${ARCH}
 }
 
 docker_manifest_list() {
-    # Create and push manifest lists, displayed as FIFO
-    echo "DOCKER MANIFEST: Create and Push docker manifest lists."
-    docker_manifest_list_version
-    docker_manifest_list_latest
-    docker_manifest_list_version_os_arch
+  # Create and push manifest lists, displayed as FIFO
+  echo "DOCKER MANIFEST: Create and Push docker manifest lists."
+  docker_manifest_list_version
+  # if build is not a beta then create and push manifest lastest
+    if [[ ${BUILD_VERSION} != *"beta"* ]]; then
+        echo "DOCKER MANIFEST: Create and Push docker manifest lists LATEST."
+        docker_manifest_list_latest
+	  else
+        echo "DOCKER MANIFEST: Create and Push docker manifest lists BETA."
+        docker_manifest_list_beta
+    fi
+  docker_manifest_list_version_os_arch
 }
 
 docker_manifest_list_version() {
-    # Manifest Create NODE_RED_HOMEKIT_VERSION
-    echo "DOCKER MANIFEST: Create and Push docker manifest list - $IMAGE:$NODE_RED_HOMEKIT_VERSION."
-    docker manifest create $IMAGE:$NODE_RED_HOMEKIT_VERSION \
-        $IMAGE:$NODE_RED_HOMEKIT_VERSION-$NODE_RED_VERSION-alpine-amd64 \
-        $IMAGE:$NODE_RED_HOMEKIT_VERSION-$NODE_RED_VERSION-debian-arm32v7 \
-        $IMAGE:$NODE_RED_HOMEKIT_VERSION-$NODE_RED_VERSION-alpine-arm64v8
+  # Manifest Create BUILD_VERSION
+  echo "DOCKER MANIFEST: Create and Push docker manifest list - ${TARGET}:${BUILD_VERSION}."
+  docker manifest create ${TARGET}:${BUILD_VERSION} \
+      ${TARGET}:${BUILD_VERSION}-${NODE_VERSION}-alpine-amd64 \
+      ${TARGET}:${BUILD_VERSION}-${NODE_VERSION}-alpine-arm32v6 \
+      ${TARGET}:${BUILD_VERSION}-${NODE_VERSION}-slim-arm32v7 \
+      ${TARGET}:${BUILD_VERSION}-${NODE_VERSION}-alpine-arm64v8
 
-    # Manifest Annotate NODE_RED_HOMEKIT_VERSION
-    docker manifest annotate $IMAGE:$NODE_RED_HOMEKIT_VERSION $IMAGE:$NODE_RED_HOMEKIT_VERSION-$NODE_RED_VERSION-debian-arm32v7 --os=linux --arch=arm --variant=v7
-    docker manifest annotate $IMAGE:$NODE_RED_HOMEKIT_VERSION $IMAGE:$NODE_RED_HOMEKIT_VERSION-$NODE_RED_VERSION-alpine-arm64v8 --os=linux --arch=arm64 --variant=v8
+  # Manifest Annotate BUILD_VERSION
+  docker manifest annotate ${TARGET}:${BUILD_VERSION} ${TARGET}:${BUILD_VERSION}-${NODE_VERSION}-alpine-arm32v6 --os=linux --arch=arm --variant=v6
+  docker manifest annotate ${TARGET}:${BUILD_VERSION} ${TARGET}:${BUILD_VERSION}-${NODE_VERSION}-slim-arm32v7 --os=linux --arch=arm --variant=v7
+  docker manifest annotate ${TARGET}:${BUILD_VERSION} ${TARGET}:${BUILD_VERSION}-${NODE_VERSION}-alpine-arm64v8 --os=linux --arch=arm64 --variant=v8
 
-    # Manifest Push NODE_RED_HOMEKIT_VERSION
-    docker manifest push $IMAGE:$NODE_RED_HOMEKIT_VERSION
+  # Manifest Push BUILD_VERSION
+  docker manifest push ${TARGET}:${BUILD_VERSION}
 }
 
 docker_manifest_list_latest() {
-    # Manifest Create latest
-    echo "DOCKER MANIFEST: Create and Push docker manifest list - $IMAGE:latest."
-    docker manifest create $IMAGE:latest \
-        $IMAGE:$NODE_RED_HOMEKIT_VERSION-$NODE_RED_VERSION-alpine-amd64 \
-        $IMAGE:$NODE_RED_HOMEKIT_VERSION-$NODE_RED_VERSION-debian-arm32v7 \
-        $IMAGE:$NODE_RED_HOMEKIT_VERSION-$NODE_RED_VERSION-alpine-arm64v8
+  # Manifest Create latest
+  echo "DOCKER MANIFEST: Create and Push docker manifest list - ${TARGET}:latest."
+  docker manifest create ${TARGET}:latest \
+    ${TARGET}:${BUILD_VERSION}-${NODE_VERSION}-alpine-amd64 \
+    ${TARGET}:${BUILD_VERSION}-${NODE_VERSION}-alpine-arm32v6 \
+    ${TARGET}:${BUILD_VERSION}-${NODE_VERSION}-slim-arm32v7 \
+    ${TARGET}:${BUILD_VERSION}-${NODE_VERSION}-alpine-arm64v8
 
-    # Manifest Annotate latest
-    docker manifest annotate $IMAGE:latest $IMAGE:$NODE_RED_HOMEKIT_VERSION-$NODE_RED_VERSION-debian-arm32v7 --os=linux --arch=arm --variant=v7
-    docker manifest annotate $IMAGE:latest $IMAGE:$NODE_RED_HOMEKIT_VERSION-$NODE_RED_VERSION-alpine-arm64v8 --os=linux --arch=arm64 --variant=v8
+  # Manifest Annotate BUILD_VERSION
+  docker manifest annotate ${TARGET}:latest ${TARGET}:${BUILD_VERSION}-${NODE_VERSION}-alpine-arm32v6 --os=linux --arch=arm --variant=v6
+  docker manifest annotate ${TARGET}:latest ${TARGET}:${BUILD_VERSION}-${NODE_VERSION}-slim-arm32v7 --os=linux --arch=arm --variant=v7
+  docker manifest annotate ${TARGET}:latest ${TARGET}:${BUILD_VERSION}-${NODE_VERSION}-alpine-arm64v8 --os=linux --arch=arm64 --variant=v8
 
-    # Manifest Push latest
-    docker manifest push $IMAGE:latest
+  # Manifest Push BUILD_VERSION
+  docker manifest push ${TARGET}:latest
+}
+
+docker_manifest_list_beta() {
+  # Manifest Create beta
+  echo "DOCKER MANIFEST: Create and Push docker manifest list - ${TARGET}:beta."
+  docker manifest create ${TARGET}:beta \
+    ${TARGET}:${BUILD_VERSION}-${NODE_VERSION}-alpine-amd64 \
+    ${TARGET}:${BUILD_VERSION}-${NODE_VERSION}-alpine-arm32v6 \
+    ${TARGET}:${BUILD_VERSION}-${NODE_VERSION}-slim-arm32v7 \
+    ${TARGET}:${BUILD_VERSION}-${NODE_VERSION}-alpine-arm64v8
+
+  # Manifest Annotate BUILD_VERSION
+  docker manifest annotate ${TARGET}:beta ${TARGET}:${BUILD_VERSION}-${NODE_VERSION}-alpine-arm32v6 --os=linux --arch=arm --variant=v6
+  docker manifest annotate ${TARGET}:beta ${TARGET}:${BUILD_VERSION}-${NODE_VERSION}-slim-arm32v7 --os=linux --arch=arm --variant=v7
+  docker manifest annotate ${TARGET}:beta ${TARGET}:${BUILD_VERSION}-${NODE_VERSION}-alpine-arm64v8 --os=linux --arch=arm64 --variant=v8
+
+  # Manifest Push BUILD_VERSION
+  docker manifest push ${TARGET}:beta
 }
 
 docker_manifest_list_version_os_arch() {
-    # Manifest Create alpine-amd64
-    echo "DOCKER MANIFEST: Create and Push docker manifest list - $IMAGE:$NODE_RED_HOMEKIT_VERSION-$NODE_RED_VERSION-alpine-amd64."
-    docker manifest create $IMAGE:$NODE_RED_HOMEKIT_VERSION-$NODE_RED_VERSION-alpine-amd64 \
-        $IMAGE:$NODE_RED_HOMEKIT_VERSION-$NODE_RED_VERSION-alpine-amd64
+  # Manifest Create alpine-amd64
+  echo "DOCKER MANIFEST: Create and Push docker manifest list - ${TARGET}:${BUILD_VERSION}-${NODE_VERSION}-alpine-amd64."
+  docker manifest create ${TARGET}:${BUILD_VERSION}-${NODE_VERSION}-alpine-amd64 \
+    ${TARGET}:${BUILD_VERSION}-${NODE_VERSION}-alpine-amd64
 
-    # Manifest push alpine-amd64
-    docker manifest push $IMAGE:$NODE_RED_HOMEKIT_VERSION-$NODE_RED_VERSION-alpine-amd64
+  # Manifest Push alpine-amd64
+  docker manifest push ${TARGET}:${BUILD_VERSION}-${NODE_VERSION}-alpine-amd64
 
-    # Manifest Create debian-arm32v7
-    echo "DOCKER MANIFEST: Create and Push docker manifest list - $IMAGE:$NODE_RED_HOMEKIT_VERSION-$NODE_RED_VERSION-debian-arm32v7."
-    docker manifest create $IMAGE:$NODE_RED_HOMEKIT_VERSION-$NODE_RED_VERSION-debian-arm32v7 \
-        $IMAGE:$NODE_RED_HOMEKIT_VERSION-$NODE_RED_VERSION-debian-arm32v7
+  # Manifest Create alpine-arm32v6
+  echo "DOCKER MANIFEST: Create and Push docker manifest list - ${TARGET}:${BUILD_VERSION}-${NODE_VERSION}-alpine-arm32v6."
+  docker manifest create ${TARGET}:${BUILD_VERSION}-${NODE_VERSION}-alpine-arm32v6 \
+    ${TARGET}:${BUILD_VERSION}-${NODE_VERSION}-alpine-arm32v6
 
-    # Manifest Annotate debian-arm32v7
-    docker manifest annotate $IMAGE:$NODE_RED_HOMEKIT_VERSION-$NODE_RED_VERSION-debian-arm32v7 $IMAGE:$NODE_RED_HOMEKIT_VERSION-$NODE_RED_VERSION-debian-arm32v7 --os=linux --arch=arm --variant=v7
+  # Manifest Annotate alpine-arm32v6
+  docker manifest annotate ${TARGET}:${BUILD_VERSION}-${NODE_VERSION}-alpine-arm32v6 ${TARGET}:${BUILD_VERSION}-${NODE_VERSION}-alpine-arm32v6 --os=linux --arch=arm --variant=v6
 
-    # Manifest push debian-arm32v7
-    docker manifest push $IMAGE:$NODE_RED_HOMEKIT_VERSION-$NODE_RED_VERSION-debian-arm32v7
+  # Manifest Push alpine-arm32v6
+  docker manifest push ${TARGET}:${BUILD_VERSION}-${NODE_VERSION}-alpine-arm32v6
 
-    # Manifest Create alpine-arm64v8
-    echo "DOCKER MANIFEST: Create and Push docker manifest list - $IMAGE:$NODE_RED_HOMEKIT_VERSION-$NODE_RED_VERSION-alpine-arm64v8."
-    docker manifest create $IMAGE:$NODE_RED_HOMEKIT_VERSION-$NODE_RED_VERSION-alpine-arm64v8 \
-        $IMAGE:$NODE_RED_HOMEKIT_VERSION-$NODE_RED_VERSION-alpine-arm64v8
+  # Manifest Create slim-arm32v7
+  echo "DOCKER MANIFEST: Create and Push docker manifest list - ${TARGET}:${BUILD_VERSION}-${NODE_VERSION}-slim-arm32v7."
+  docker manifest create ${TARGET}:${BUILD_VERSION}-${NODE_VERSION}-slim-arm32v7 \
+    ${TARGET}:${BUILD_VERSION}-${NODE_VERSION}-slim-arm32v7
 
-    # Manifest Annotate alpine-arm64v8
-    docker manifest annotate $IMAGE:$NODE_RED_HOMEKIT_VERSION-$NODE_RED_VERSION-alpine-arm64v8 $IMAGE:$NODE_RED_HOMEKIT_VERSION-$NODE_RED_VERSION-alpine-arm64v8 --os=linux --arch=arm64 --variant=v8
+  # Manifest Annotate slim-arm32v7
+  docker manifest annotate ${TARGET}:${BUILD_VERSION}-${NODE_VERSION}-slim-arm32v7 ${TARGET}:${BUILD_VERSION}-${NODE_VERSION}-slim-arm32v7 --os=linux --arch=arm --variant=v7
 
-    # Manifest push alpine-arm64v8
-    docker manifest push $IMAGE:$NODE_RED_HOMEKIT_VERSION-$NODE_RED_VERSION-alpine-arm64v8
+  # Manifest Push slim-arm32v7
+  docker manifest push ${TARGET}:${BUILD_VERSION}-${NODE_VERSION}-slim-arm32v7
+
+  # Manifest Create alpine-arm64v8
+  echo "DOCKER MANIFEST: Create and Push docker manifest list - ${TARGET}:${BUILD_VERSION}-${NODE_VERSION}-alpine-arm64v8."
+  docker manifest create ${TARGET}:${BUILD_VERSION}-${NODE_VERSION}-alpine-arm64v8 \
+    ${TARGET}:${BUILD_VERSION}-${NODE_VERSION}-alpine-arm64v8
+
+  # Manifest Annotate alpine-arm64v8
+  docker manifest annotate ${TARGET}:${BUILD_VERSION}-${NODE_VERSION}-alpine-arm64v8 ${TARGET}:${BUILD_VERSION}-${NODE_VERSION}-alpine-arm64v8 --os=linux --arch=arm64 --variant=v8
+
+  # Manifest Push alpine-arm64v8
+  docker manifest push ${TARGET}:${BUILD_VERSION}-${NODE_VERSION}-alpine-arm64v8
 }
+
+#
+#
+# #------------
+# docker_manifest_list_node_v10() {
+#     # Manifest Create v10
+#     docker manifest create $TARGET:$NODE_RED_VERSION-10 \
+#       $TARGET:$NODE_RED_VERSION-10-alpine-amd64 \
+#       # $TARGET:$NODE_RED_VERSION-10-alpine-arm32v6 \
+#       $TARGET:$NODE_RED_VERSION-10-debian-arm32v7 \
+#       $TARGET:$NODE_RED_VERSION-10-alpine-arm64v8
+#
+#     # Manifest Annotate v10
+#     #docker manifest annotate $TARGET:$NODE_RED_VERSION-10 $TARGET:$NODE_RED_VERSION-10-alpine-arm32v6 --os=linux --arch=arm --variant=v6
+#     docker manifest annotate $TARGET:$NODE_RED_VERSION-10 $TARGET:$NODE_RED_VERSION-10-debian-arm32v7 --os=linux --arch=arm --variant=v7
+#     docker manifest annotate $TARGET:$NODE_RED_VERSION-10 $TARGET:$NODE_RED_VERSION-10-alpine-arm64v8 --os=linux --arch=arm64 --variant=v8
+#
+#     # Manifest Push v10
+#     docker manifest push $TARGET:$NODE_RED_VERSION-10
+# }
+#
+# docker_manifest_list_latest() {
+#     # Manifest Create LATEST
+#     docker manifest create $TARGET:latest \
+#         $TARGET:latest-8-alpine-amd64 \
+#         $TARGET:latest-8-alpine-arm32v6 \
+#         $TARGET:latest-8-debian-arm32v7 \
+#         $TARGET:latest-8-alpine-arm64v8
+#
+#     # Manifest Annotate LATEST
+#     docker manifest annotate $TARGET:latest $TARGET:latest-8-alpine-arm32v6 --os=linux --arch=arm --variant=v6
+#     docker manifest annotate $TARGET:latest $TARGET:latest-8-debian-arm32v7 --os=linux --arch=arm --variant=v7
+#     docker manifest annotate $TARGET:latest $TARGET:latest-8-alpine-arm64v8 --os=linux --arch=arm64 --variant=v8
+#
+#     # Manifest Push LATEST
+#     docker manifest push $TARGET:latest
+# }
 
 setup_dependencies() {
   echo "PREPARE: Setting up dependencies."
 
   sudo apt update -y
-  #sudo apt upgrade -y
   # sudo apt install realpath python python-pip -y
   sudo apt install --only-upgrade docker-ce -y
   # sudo pip install docker-compose || true
-
-  docker info
+  #
+  # docker info
   # docker-compose --version
 }
 
@@ -193,6 +270,8 @@ update_docker_configuration() {
     "max-concurrent-downloads": 50,
     "max-concurrent-uploads": 50
   }' | sudo tee /etc/docker/daemon.json
+
+  sudo service docker restart
 }
 
 prepare_qemu(){

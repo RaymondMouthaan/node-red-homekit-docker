@@ -1,0 +1,46 @@
+sudo: 'required'
+
+services:
+  - 'docker'
+
+language:
+  - 'bash'
+
+env:
+  global:
+    - BASE_IMAGE_NODE_RED_VERSION=0.19.5-8
+    - IMAGE=raymondmm/node-red-homekit
+    - QEMU_VERSION=v3.0.0
+    - NODE_RED_VERSION=x.y.z
+    - NODE_RED_HOMEKIT_VERSION=x.y.z
+
+before_install:
+  - . ./update_version.sh
+  - ./.docker/docker.sh prepare
+  - ./.docker/docker.sh build
+
+script:
+  - ./.docker/docker.sh test
+
+after_success:
+  - >
+    if [ "$TRAVIS_BRANCH" == "master" ] && [ "$TRAVIS_PULL_REQUEST" == "false" ]; then
+      # Docker Login
+      echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+
+      # Tag all images
+      ./.docker/docker.sh tag
+
+      # Push all images
+      ./.docker/docker.sh push
+
+      # Create and push manifest list
+      ./.docker/docker.sh manifest-list
+
+      # Docker Logout
+      docker logout
+    fi
+
+# notify me when things fail
+notifications:
+    email: true
