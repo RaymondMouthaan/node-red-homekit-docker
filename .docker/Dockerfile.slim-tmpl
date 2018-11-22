@@ -37,6 +37,7 @@ ENV NODE_VERSION=$NODE_VERSION
 ENV OS=$OS
 ENV ARCH=$ARCH
 ENV HOST_NAME myhostname
+ENV GOSU_VERSION 1.11
 
 # Env variables holding file path for flows configuration
 ENV FLOWS=flows.json
@@ -63,8 +64,8 @@ RUN set -ex \
     && mkdir /data \
     && chown -Rv node-red:node-red /data \
     && dpkgArch="$(dpkg --print-architecture | awk -F- '{ print $NF }')" \
-    && wget -O /usr/local/bin/gosu "https://github.com/tianon/gosu/releases/download/$GOSU_VERSION/gosu-$dpkgArch" \
-    && wget -O /usr/local/bin/gosu.asc "https://github.com/tianon/gosu/releases/download/$GOSU_VERSION/gosu-$dpkgArch.asc" \
+    && wget -O /usr/local/bin/gosu "https://github.com/tianon/gosu/releases/download/${GOSU_VERSION}/gosu-$dpkgArch" \
+    && wget -O /usr/local/bin/gosu.asc "https://github.com/tianon/gosu/releases/download/${GOSU_VERSION}/gosu-$dpkgArch.asc" \
     && export GNUPGHOME \
     && GNUPGHOME="$(mktemp -d)" \
     && GPG_KEY="B42F6819007F00F88E364FD4036A9C25BF357DD4" \
@@ -81,7 +82,7 @@ RUN set -ex \
     && dbus-uuidgen --ensure \
     && mv /tmp/entrypoint.sh /usr/src/node-red/entrypoint.sh \
     && chmod 755 /usr/src/node-red/entrypoint.sh
-    
+
 # Run as node-red user
 USER node-red
 
