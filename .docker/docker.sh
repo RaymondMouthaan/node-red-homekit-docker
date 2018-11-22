@@ -69,27 +69,27 @@ docker_build() {
 
 docker_test() {
   echo "DOCKER TEST: Test Docker image."
-  echo "DOCKER TEST: testing image -> ${TARGET}:build-${NODE_VERSION}-${OS}-${ARCH}."
+  echo "DOCKER TEST: testing image -> ${TARGET}:build-${NODE_RED_VERSION}-${NODE_VERSION}-${OS}-${ARCH}."
 
-  docker run -d --rm --name=test-${NODE_VERSION}-${ARCH} ${TARGET}:build-${NODE_VERSION}-${OS}-${ARCH}
+  docker run -d --rm --name=test-${NODE_RED_VERSION}-${NODE_VERSION}-${OS}-${ARCH} ${TARGET}:build-${NODE_RED_VERSION}-${NODE_VERSION}-${OS}-${ARCH}
   if [ $? -ne 0 ]; then
-     echo "DOCKER TEST: FAILED - Docker container test-${NODE_VERSION}-${OS}-${ARCH} failed to start."
+     echo "DOCKER TEST: FAILED - Docker container test-${NODE_RED_VERSION}-${NODE_VERSION}-${OS}-${ARCH} failed to start."
      exit 1
   else
-     echo "DOCKER TEST: PASSED - Docker container test-${NODE_VERSION}-${OS}-${ARCH} succeeded to start."
+     echo "DOCKER TEST: PASSED - Docker container test-${NODE_RED_VERSION}-${NODE_VERSION}-${OS}-${ARCH} succeeded to start."
   fi
 }
 
 docker_tag() {
     echo "DOCKER TAG: Tag Docker image."
-    echo "DOCKER TAG: tagging image - ${TARGET}:${BUILD_VERSION}-${NODE_VERSION}-${OS}-${ARCH}."
-    docker tag ${TARGET}:build-${NODE_VERSION}-${OS}-${ARCH} ${TARGET}:${BUILD_VERSION}-${NODE_VERSION}-${OS}-${ARCH}
+    echo "DOCKER TAG: tagging image - ${TARGET}:build-${NODE_RED_VERSION}-${NODE_VERSION}-${OS}-${ARCH}."
+    docker tag ${TARGET}:build-${NODE_RED_VERSION}-${NODE_VERSION}-${OS}-${ARCH} ${TARGET}:${BUILD_VERSION}-${NODE_RED_VERSION}-${NODE_VERSION}-${OS}-${ARCH}
 }
 
 docker_push() {
   echo "DOCKER PUSH: Push Docker image."
-  echo "DOCKER PUSH: pushing - ${TARGET}:${BUILD_VERSION}-${NODE_VERSION}-${OS}-${ARCH}."
-  docker push ${TARGET}:${BUILD_VERSION}-${NODE_VERSION}-${OS}-${ARCH}
+  echo "DOCKER PUSH: pushing - ${TARGET}:${BUILD_VERSION}-${NODE_RED_VERSION}-${NODE_VERSION}-${OS}-${ARCH}."
+  docker push ${TARGET}:${BUILD_VERSION}-${NODE_RED_VERSION}-${NODE_VERSION}-${OS}-${ARCH}
 }
 
 docker_manifest_list() {

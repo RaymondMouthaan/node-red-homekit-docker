@@ -35,24 +35,24 @@ script:
   # Build Docker image
   - ./.docker/docker.sh build
 
-  # # Test Docker image
-  # - ./.docker/docker.sh test
-  #
-  # # Push Docker image
-  # - >
-  #   if [ ! -z "${TRAVIS_TAG}" ]; then
-  #     # Tag Docker image
-  #     ./.docker/docker.sh tag
-  #
-  #     # Docker Login
-  #     echo "${DOCKER_PASSWORD}" | docker login -u "${DOCKER_USERNAME}" --password-stdin
-  #
-  #     # Push Docker image
-  #     docker push ${TARGET}:${BUILD_VERSION}-${NODE_VERSION}-${OS}-${ARCH}
-  #
-  #     # Docker Logout
-  #     docker logout
-  #   fi
+  # Test Docker image
+  - ./.docker/docker.sh test
+
+  # Push Docker image
+  - >
+    if [ ! -z "${TRAVIS_TAG}" ]; then
+      # Tag Docker image
+      ./.docker/docker.sh tag
+
+      # Docker Login
+      echo "${DOCKER_PASSWORD}" | docker login -u "${DOCKER_USERNAME}" --password-stdin
+
+      # Push Docker image
+      docker push ${TARGET}:${BUILD_VERSION}-${NODE_VERSION}-${OS}-${ARCH}
+
+      # Docker Logout
+      docker logout
+    fi
 
 jobs:
     include:
