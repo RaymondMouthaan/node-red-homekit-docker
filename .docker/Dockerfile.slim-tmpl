@@ -46,6 +46,9 @@ ENV NODE_PATH=/usr/src/node-red/node_modules:/data/node_modules
 # Copy entrypoint
 COPY ./entrypoint.slim /tmp/entrypoint.sh
 
+RUN mkdir ~/.gnupg
+RUN echo "disable-ipv6" >> ~/.gnupg/dirmngr.conf
+
 # Install tools, create node-red app and data dir, add user and set rights
 RUN set -ex \
     && apt-get update \
