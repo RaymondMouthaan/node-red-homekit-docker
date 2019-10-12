@@ -1,22 +1,43 @@
-sudo: 'required'
+sudo: required
 
-services:
-  - 'docker'
+dist: xenial
 
-language:
-  - 'bash'
+services: docker
+
+language: bash
 
 env:
   global:
-    - NODE_RED_VERSION=x.y.z
-    - TARGET=raymondmm/node-red-homekit
-    - QEMU_VERSION=v3.1.0-2
-    - NODE_RED_HOMEKIT_VERSION=a.b.c
+    - QEMU_VERSION=v4.0.0
+    - S6_VERSION=v1.22.1.0
+    - DOCKER_FILE=Dockerfile.alpine
 
   matrix:
-    - DOCKER_FILE=Dockerfile.alpine-tmpl BUILD_FROM=amd64/node NODE_VERSION=10 OS=alpine QEMU_ARCH=x86_64 ARCH=amd64
-    - DOCKER_FILE=Dockerfile.alpine-tmpl BUILD_FROM=arm32v6/node NODE_VERSION=10 OS=alpine QEMU_ARCH=arm ARCH=arm32v6
-    - DOCKER_FILE=Dockerfile.alpine-tmpl BUILD_FROM=arm64v8/node NODE_VERSION=10 OS=alpine QEMU_ARCH=aarch64 ARCH=arm64v8
+    ### Node JS 10 #####################################################################################################
+    # Default Images
+    - NODE_VERSION=10 TAG_SUFFIX=default QEMU_ARCH=x86_64  ARCH=amd64   S6_ARCH=amd64
+    - NODE_VERSION=10 TAG_SUFFIX=default QEMU_ARCH=arm     ARCH=arm32v6 S6_ARCH=armhf
+    - NODE_VERSION=10 TAG_SUFFIX=default QEMU_ARCH=arm     ARCH=arm32v7 S6_ARCH=armhf
+    - NODE_VERSION=10 TAG_SUFFIX=default QEMU_ARCH=aarch64 ARCH=arm64v8 S6_ARCH=aarch64
+
+    # Minimal Images
+    - NODE_VERSION=10 TAG_SUFFIX=minimal QEMU_ARCH=x86_64  ARCH=amd64   S6_ARCH=amd64
+    - NODE_VERSION=10 TAG_SUFFIX=minimal QEMU_ARCH=arm     ARCH=arm32v6 S6_ARCH=armhf
+    - NODE_VERSION=10 TAG_SUFFIX=minimal QEMU_ARCH=arm     ARCH=arm32v7 S6_ARCH=armhf
+    - NODE_VERSION=10 TAG_SUFFIX=minimal QEMU_ARCH=aarch64 ARCH=arm64v8 S6_ARCH=aarch64
+
+    ### Node JS 12 #####################################################################################################
+    # Default Images
+    - NODE_VERSION=12 TAG_SUFFIX=default QEMU_ARCH=x86_64  ARCH=amd64   S6_ARCH=amd64
+    - NODE_VERSION=12 TAG_SUFFIX=default QEMU_ARCH=arm     ARCH=arm32v6 S6_ARCH=armhf
+    - NODE_VERSION=12 TAG_SUFFIX=default QEMU_ARCH=arm     ARCH=arm32v7 S6_ARCH=armhf
+    - NODE_VERSION=12 TAG_SUFFIX=default QEMU_ARCH=aarch64 ARCH=arm64v8 S6_ARCH=aarch64
+
+    # Minimal Images
+    - NODE_VERSION=12 TAG_SUFFIX=minimal QEMU_ARCH=x86_64  ARCH=amd64   S6_ARCH=amd64
+    - NODE_VERSION=12 TAG_SUFFIX=minimal QEMU_ARCH=arm     ARCH=arm32v6 S6_ARCH=armhf
+    - NODE_VERSION=12 TAG_SUFFIX=minimal QEMU_ARCH=arm     ARCH=arm32v7 S6_ARCH=armhf
+    - NODE_VERSION=12 TAG_SUFFIX=minimal QEMU_ARCH=aarch64 ARCH=arm64v8 S6_ARCH=aarch64
 
 before_install:
   - ./.docker/docker.sh prepare
@@ -24,20 +45,35 @@ before_install:
 install: true
 
 before_script:
-    # Set BUILD_VERSION
-    - if [ ! -z "${TRAVIS_TAG}" ]; then export BUILD_VERSION=${TRAVIS_TAG:1}; else export BUILD_VERSION=beta; fi
+
+  # Set TARGET to `raymondmm/node-red-homekit-dev` if empty
+  - >
+    if [ -z "${TARGET}" ]; then
+      export TARGET=raymondmm/node-red-homekit-dev
+    fi
+
+  # Set NODE_RED_VERSION from package.json
+  - >
+    export NODE_RED_VERSION=$(grep -oE "\"node-red\": \"(\w*.\w*.\w*.\w*.\w*.)" package.json | cut -d\" -f4)
+
+  # Set HOMEKIT_BRIDGED_VERSION from package.json
+  - >
+    export HOMEKIT_BRIDGED_VERSION=$(grep -oE "\"node-red-contrib-homekit-bridged\": \"(\w*.\w*.\w*.\w*.\w*.)" package.json | cut -d\" -f4)
+
+  # Set BUILD_VERSION
+  - >
+    if [ ! -z "${TRAVIS_TAG}" ]; then
+      export BUILD_VERSION=${TRAVIS_TAG:1};
+    fi
 
 script:
-  # Update NODE_RED_VERSION from package.json
-  - . ./update_version.sh
-
   # Build Docker image
   - ./.docker/docker.sh build
 
   # Test Docker image
   - ./.docker/docker.sh test
 
-  # Push Docker image
+  # Push Docker image, only if TRAVIS_TAG is set
   - >
     if [ ! -z "${TRAVIS_TAG}" ]; then
       # Tag Docker image
@@ -56,21 +92,38 @@ script:
 jobs:
     include:
         - stage: manifest
+          # Only create and push manifest list to Docker Hub, when tag starts with a `v`, eg. v1.0.2
           if: tag =~ ^v
           script:
-              # Update NODE_RED_VERSION from package.json
-              - . ./update_version.sh
+              # Create and push Docker manifest lists
+              # The push order is displayed in reverse order on Docker Hub
 
               # Docker Login
               - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
 
-              # Create and Push Docker Manifest Lists to Docker Hub
-              - echo "Create manifest list for all docker images."
-              - ./.docker/docker.sh manifest-list
+              # Create and push manifest list `version` for minimal
+              - ./.docker/docker.sh manifest-list-version "12" "minimal"
+              - ./.docker/docker.sh manifest-list-version "10" "minimal"
+              - ./.docker/docker.sh manifest-list-version "" "minimal"
+
+              # Create and push manifest list `version` for default
+              - ./.docker/docker.sh manifest-list-version "12" "default"
+              - ./.docker/docker.sh manifest-list-version "10" "default"
+              - ./.docker/docker.sh manifest-list-version "" "default"
+
+              # Create and push manifest list 'latest' or 'testing' for minimal
+              - ./.docker/docker.sh manifest-list-test-beta-latest "12" "minimal"
+              - ./.docker/docker.sh manifest-list-test-beta-latest "10" "minimal"
+              - ./.docker/docker.sh manifest-list-test-beta-latest "" "minimal"
+
+              # Create and push manifest list 'latest' or 'testing' for default
+              - ./.docker/docker.sh manifest-list-test-beta-latest "12" "default"
+              - ./.docker/docker.sh manifest-list-test-beta-latest "10" "default"
+              - ./.docker/docker.sh manifest-list-test-beta-latest "" "default"
 
               # Docker Logout
               - docker logout
 
-# notify me when things fail
+# Notify me when things fail
 notifications:
-    email: true
+  email: true

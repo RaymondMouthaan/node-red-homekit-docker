@@ -3,213 +3,171 @@
 set -o errexit
 
 main() {
-    case $1 in
-        "prepare")
-            docker_prepare
-            ;;
-        "build")
-            docker_build
-            ;;
-        "test")
-            docker_test
-            ;;
-        "tag")
-            docker_tag
-            ;;
-        "push")
-            docker_push
-            ;;
-        "manifest-list")
-            docker_manifest_list
-            ;;
-        *)
-            echo "none of above!"
-    esac
+  # arg 1 holds switch string
+  # arg 2 holds node version
+  # arg 3 holds tag suffix
+
+  case $1 in
+  "prepare")
+    docker_prepare
+    ;;
+  "build")
+    docker_build
+    ;;
+  "test")
+    docker_test
+    ;;
+  "tag")
+    docker_tag
+    ;;
+  "push")
+    docker_push
+    ;;
+  "manifest-list-version")
+    docker_manifest_list_version "$2" "$3"
+    ;;
+  "manifest-list-test-beta-latest")
+    docker_manifest_list_test_beta_latest "$2" "$3"
+    ;;
+  *)
+    echo "none of above!"
+    ;;
+  esac
 }
 
-docker_prepare() {
-    # Prepare the machine before any code installation scripts
-    setup_dependencies
+function docker_prepare() {
+  # Prepare the machine before any code installation scripts
+  setup_dependencies
 
-    # Update docker configuration to enable docker manifest command
-    update_docker_configuration
+  # Update docker configuration to enable docker manifest command
+  update_docker_configuration
 
-    # Prepare qemu to build images other then x86_64 on travis
-    prepare_qemu
+  # Prepare qemu to build images other then x86_64 on travis
+  prepare_qemu
 }
 
-docker_build() {
+function docker_build() {
   # Build Docker image
   echo "DOCKER BUILD: Build Docker image."
-  echo "DOCKER BUILD: build version -> ${BUILD_VERSION}."
-  echo "DOCKER BUILD: build from -> ${BUILD_FROM}."
-  echo "DOCKER BUILD: node version -> ${NODE_VERSION}."
-  echo "DOCKER BUILD: os -> ${OS}."
-  echo "DOCKER BUILD: node-red version -> ${NODE_RED_VERSION}."
-  echo "DOCKER BUILD: node-red-homekit version -> ${NODE_RED_HOMEKIT_VERSION}."
   echo "DOCKER BUILD: arch - ${ARCH}."
+  echo "DOCKER BUILD: node version -> ${NODE_VERSION}."
+  echo "DOCKER BUILD: build version -> ${BUILD_VERSION}."
+  echo "DOCKER BUILD: node-red version -> ${NODE_RED_VERSION}."
+  echo "DOCKER BUILD: node-red-homekit-bridged version -> ${HOMEKIT_BRIDGED_VERSION}."
   echo "DOCKER BUILD: qemu arch - ${QEMU_ARCH}."
+  echo "DOCKER BUILD: s6 arch - ${S6_ARCH}."
+  echo "DOCKER BUILD: s6 version - ${S6_VERSION}."
+  echo "DOCKER BUILD: tag suffix - ${TAG_SUFFIX}."
   echo "DOCKER BUILD: docker file - ${DOCKER_FILE}."
 
+  if [[ ${TAG_SUFFIX} == "default" ]]; then export TAG_SUFFIX=""; else export TAG_SUFFIX="-${TAG_SUFFIX}"; fi
+
   docker build --no-cache \
-    --build-arg BUILD_REF=${TRAVIS_COMMIT} \
+    --build-arg ARCH=${ARCH} \
+    --build-arg NODE_VERSION=${NODE_VERSION} \
     --build-arg BUILD_DATE=$(date +"%Y-%m-%dT%H:%M:%SZ") \
     --build-arg BUILD_VERSION=${BUILD_VERSION} \
-    --build-arg BUILD_FROM=${BUILD_FROM} \
-    --build-arg NODE_VERSION=${NODE_VERSION} \
-    --build-arg OS=${OS} \
-    --build-arg NODE_RED_VERSION=v${NODE_RED_VERSION} \
-    --build-arg NODE_RED_HOMEKIT_VERSION=v${NODE_RED_HOMEKIT_VERSION} \
-    --build-arg ARCH=${ARCH} \
+    --build-arg BUILD_REF=${TRAVIS_COMMIT} \
+    --build-arg NODE_RED_VERSION=${NODE_RED_VERSION} \
+    --build-arg HOMEKIT_BRIDGED_VERSION=${HOMEKIT_BRIDGED_VERSION} \
     --build-arg QEMU_ARCH=${QEMU_ARCH} \
+    --build-arg S6_ARCH=${S6_ARCH} \
+    --build-arg S6_VERSION=${S6_VERSION} \
+    --build-arg TAG_SUFFIX=${TAG_SUFFIX} \
     --file ./.docker/${DOCKER_FILE} \
-    --tag ${TARGET}:build-${NODE_RED_VERSION}-${NODE_VERSION}-${OS}-${ARCH} .
-
+    --tag ${TARGET}:build .
 }
 
-docker_test() {
+function docker_test() {
   echo "DOCKER TEST: Test Docker image."
-  echo "DOCKER TEST: testing image -> ${TARGET}:build-${NODE_RED_VERSION}-${NODE_VERSION}-${OS}-${ARCH}."
+  echo "DOCKER TEST: testing image -> ${TARGET}:build"
 
-  docker run -d --rm --name=test-${NODE_RED_VERSION}-${NODE_VERSION}-${OS}-${ARCH} ${TARGET}:build-${NODE_RED_VERSION}-${NODE_VERSION}-${OS}-${ARCH}
+  docker run -d --rm --name=testing ${TARGET}:build
   if [ $? -ne 0 ]; then
-     echo "DOCKER TEST: FAILED - Docker container test-${NODE_RED_VERSION}-${NODE_VERSION}-${OS}-${ARCH} failed to start."
-     exit 1
+    echo "DOCKER TEST: FAILED - Docker container testing failed to start."
+    exit 1
   else
-     echo "DOCKER TEST: PASSED - Docker container test-${NODE_RED_VERSION}-${NODE_VERSION}-${OS}-${ARCH} succeeded to start."
+    echo "DOCKER TEST: PASSED - Docker container testing succeeded to start."
   fi
 }
 
-docker_tag() {
-    echo "DOCKER TAG: Tag Docker image."
-    echo "DOCKER TAG: tagging image - ${TARGET}:build-${NODE_RED_VERSION}-${NODE_VERSION}-${OS}-${ARCH}."
-    docker tag ${TARGET}:build-${NODE_RED_VERSION}-${NODE_VERSION}-${OS}-${ARCH} ${TARGET}:${BUILD_VERSION}-${NODE_RED_VERSION}-${NODE_VERSION}-${OS}-${ARCH}
+function docker_tag() {
+  echo "DOCKER TAG: Tag Docker image."
+
+  if [[ ${TAG_SUFFIX} == "default" ]]; then export TAG_SUFFIX=""; else export TAG_SUFFIX="-${TAG_SUFFIX}"; fi
+
+  echo "DOCKER TAG: tagging image - ${TARGET}:${BUILD_VERSION}-${NODE_RED_VERSION}-${NODE_VERSION}${TAG_SUFFIX}-${ARCH}"
+  docker tag ${TARGET}:build ${TARGET}:${BUILD_VERSION}-${NODE_RED_VERSION}-${NODE_VERSION}${TAG_SUFFIX}-${ARCH}
 }
 
-docker_push() {
+function docker_push() {
   echo "DOCKER PUSH: Push Docker image."
-  echo "DOCKER PUSH: pushing - ${TARGET}:${BUILD_VERSION}-${NODE_RED_VERSION}-${NODE_VERSION}-${OS}-${ARCH}."
-  docker push ${TARGET}:${BUILD_VERSION}-${NODE_RED_VERSION}-${NODE_VERSION}-${OS}-${ARCH}
+
+  if [[ ${TAG_SUFFIX} == "default" ]]; then export TAG_SUFFIX=""; else export TAG_SUFFIX="-${TAG_SUFFIX}"; fi
+
+  echo "DOCKER TAG: pushing image - ${TARGET}:${BUILD_VERSION}-${NODE_RED_VERSION}-${NODE_VERSION}${TAG_SUFFIX}-${ARCH}"
+  docker push ${TARGET}:${BUILD_VERSION}-${NODE_RED_VERSION}-${NODE_VERSION}${TAG_SUFFIX}-${ARCH}
 }
 
-docker_manifest_list() {
-  echo "DOCKER BUILD: target -> ${TARGET}."
-  echo "DOCKER BUILD: build version -> ${BUILD_VERSION}."
-  echo "DOCKER BUILD: node-red version -> ${NODE_RED_VERSION}."
-  echo "DOCKER BUILD: node version -> ${NODE_VERSION}."
-  echo "DOCKER BUILD: node-red-homekit version -> ${NODE_RED_HOMEKIT_VERSION}."
+function docker_manifest_list_version() {
 
-  # Create and push manifest lists, displayed as FIFO
-  echo "DOCKER MANIFEST: Create and Push docker manifest lists."
-  docker_manifest_list_version
+  if [[ ${1} == "" ]]; then export NODE_VERSION=""; else export NODE_VERSION="-${1}"; fi
+  if [[ ${2} == "default" ]]; then export TAG_SUFFIX=""; else export TAG_SUFFIX="-${2}"; fi
 
-  # if build is not a beta then create and push manifest lastest
-  if [[ ${BUILD_VERSION} != *"beta"* ]]; then
-      echo "DOCKER MANIFEST: Create and Push docker manifest lists LATEST."
-      docker_manifest_list_latest
+  echo "DOCKER MANIFEST: Create and Push docker manifest list - ${TARGET}:${BUILD_VERSION}-${NODE_RED_VERSION}${NODE_VERSION}${TAG_SUFFIX}."
+
+  docker manifest create ${TARGET}:${BUILD_VERSION}-${NODE_RED_VERSION}${NODE_VERSION}${TAG_SUFFIX} \
+    ${TARGET}:${BUILD_VERSION}-${NODE_RED_VERSION}${NODE_VERSION:--10}${TAG_SUFFIX}-amd64 \
+    ${TARGET}:${BUILD_VERSION}-${NODE_RED_VERSION}${NODE_VERSION:--10}${TAG_SUFFIX}-arm32v6 \
+    ${TARGET}:${BUILD_VERSION}-${NODE_RED_VERSION}${NODE_VERSION:--10}${TAG_SUFFIX}-arm32v7 \
+    ${TARGET}:${BUILD_VERSION}-${NODE_RED_VERSION}${NODE_VERSION:--10}${TAG_SUFFIX}-arm64v8
+
+  docker manifest annotate ${TARGET}:${BUILD_VERSION}-${NODE_RED_VERSION}${NODE_VERSION}${TAG_SUFFIX} ${TARGET}:${BUILD_VERSION}-${NODE_RED_VERSION}${NODE_VERSION:--10}${TAG_SUFFIX}-arm32v6 --os=linux --arch=arm --variant=v6
+  docker manifest annotate ${TARGET}:${BUILD_VERSION}-${NODE_RED_VERSION}${NODE_VERSION}${TAG_SUFFIX} ${TARGET}:${BUILD_VERSION}-${NODE_RED_VERSION}${NODE_VERSION:--10}${TAG_SUFFIX}-arm32v7 --os=linux --arch=arm --variant=v7
+  docker manifest annotate ${TARGET}:${BUILD_VERSION}-${NODE_RED_VERSION}${NODE_VERSION}${TAG_SUFFIX} ${TARGET}:${BUILD_VERSION}-${NODE_RED_VERSION}${NODE_VERSION:--10}${TAG_SUFFIX}-arm64v8 --os=linux --arch=arm64 --variant=v8
+
+  docker manifest push ${TARGET}:${BUILD_VERSION}-${NODE_RED_VERSION}${NODE_VERSION}${TAG_SUFFIX}
+  
+  docker run --rm mplatform/mquery ${TARGET}:${BUILD_VERSION}-${NODE_RED_VERSION}${NODE_VERSION}${TAG_SUFFIX}
+}
+
+function docker_manifest_list_test_beta_latest() {
+
+  if [[ ${BUILD_VERSION} == *"test"* ]]; then
+    export TAG_PREFIX="test";
+  elif [[ ${BUILD_VERSION} == *"beta"* ]]; then
+    export TAG_PREFIX="beta";
   else
-      echo "DOCKER MANIFEST: Create and Push docker manifest lists BETA."
-      docker_manifest_list_beta
+    export TAG_PREFIX="latest";
   fi
 
-  docker_manifest_list_version_os_arch
+  if [[ ${1} == "" ]]; then export NODE_VERSION=""; else export NODE_VERSION="-${1}"; fi
+  if [[ ${2} == "default" ]]; then export TAG_SUFFIX=""; else export TAG_SUFFIX="-${2}"; fi
+
+  echo "DOCKER MANIFEST: Create and Push docker manifest list - ${TARGET}:${TAG_PREFIX}${NODE_VERSION}${TAG_SUFFIX}."
+
+  docker manifest create ${TARGET}:${TAG_PREFIX}${NODE_VERSION}${TAG_SUFFIX} \
+    ${TARGET}:${BUILD_VERSION}-${NODE_RED_VERSION}${NODE_VERSION:--10}${TAG_SUFFIX}-amd64 \
+    ${TARGET}:${BUILD_VERSION}-${NODE_RED_VERSION}${NODE_VERSION:--10}${TAG_SUFFIX}-arm32v6 \
+    ${TARGET}:${BUILD_VERSION}-${NODE_RED_VERSION}${NODE_VERSION:--10}${TAG_SUFFIX}-arm32v7 \
+    ${TARGET}:${BUILD_VERSION}-${NODE_RED_VERSION}${NODE_VERSION:--10}${TAG_SUFFIX}-arm64v8
+
+  docker manifest annotate ${TARGET}:${TAG_PREFIX}${NODE_VERSION}${TAG_SUFFIX} ${TARGET}:${BUILD_VERSION}-${NODE_RED_VERSION}${NODE_VERSION:--10}${TAG_SUFFIX}-arm32v6 --os=linux --arch=arm --variant=v6
+  docker manifest annotate ${TARGET}:${TAG_PREFIX}${NODE_VERSION}${TAG_SUFFIX} ${TARGET}:${BUILD_VERSION}-${NODE_RED_VERSION}${NODE_VERSION:--10}${TAG_SUFFIX}-arm32v7 --os=linux --arch=arm --variant=v7
+  docker manifest annotate ${TARGET}:${TAG_PREFIX}${NODE_VERSION}${TAG_SUFFIX} ${TARGET}:${BUILD_VERSION}-${NODE_RED_VERSION}${NODE_VERSION:--10}${TAG_SUFFIX}-arm64v8 --os=linux --arch=arm64 --variant=v8
+
+  docker manifest push ${TARGET}:${TAG_PREFIX}${NODE_VERSION}${TAG_SUFFIX}
+  
+  docker run --rm mplatform/mquery ${TARGET}:${TAG_PREFIX}${NODE_VERSION}${TAG_SUFFIX}
 }
 
-docker_manifest_list_version() {
-  # Manifest Create BUILD_VERSION
-  echo "DOCKER MANIFEST: Create and Push docker manifest list - ${TARGET}:${BUILD_VERSION}."
-  docker manifest create ${TARGET}:${BUILD_VERSION} \
-      ${TARGET}:${BUILD_VERSION}-${NODE_RED_VERSION}-${NODE_VERSION}-alpine-amd64 \
-      ${TARGET}:${BUILD_VERSION}-${NODE_RED_VERSION}-${NODE_VERSION}-alpine-arm32v6 \
-      ${TARGET}:${BUILD_VERSION}-${NODE_RED_VERSION}-${NODE_VERSION}-alpine-arm64v8
-
-  # Manifest Annotate BUILD_VERSION
-  docker manifest annotate ${TARGET}:${BUILD_VERSION} ${TARGET}:${BUILD_VERSION}-${NODE_RED_VERSION}-${NODE_VERSION}-alpine-arm32v6 --os=linux --arch=arm --variant=v6
-  docker manifest annotate ${TARGET}:${BUILD_VERSION} ${TARGET}:${BUILD_VERSION}-${NODE_RED_VERSION}-${NODE_VERSION}-alpine-arm64v8 --os=linux --arch=arm64 --variant=v8
-
-  # Manifest Push BUILD_VERSION
-  docker manifest push ${TARGET}:${BUILD_VERSION}
-}
-
-docker_manifest_list_latest() {
-  # Manifest Create latest
-  echo "DOCKER MANIFEST: Create and Push docker manifest list - ${TARGET}:latest."
-  docker manifest create ${TARGET}:latest \
-    ${TARGET}:${BUILD_VERSION}-${NODE_RED_VERSION}-${NODE_VERSION}-alpine-amd64 \
-    ${TARGET}:${BUILD_VERSION}-${NODE_RED_VERSION}-${NODE_VERSION}-alpine-arm32v6 \
-    ${TARGET}:${BUILD_VERSION}-${NODE_RED_VERSION}-${NODE_VERSION}-alpine-arm64v8
-
-  # Manifest Annotate BUILD_VERSION
-  docker manifest annotate ${TARGET}:latest ${TARGET}:${BUILD_VERSION}-${NODE_RED_VERSION}-${NODE_VERSION}-alpine-arm32v6 --os=linux --arch=arm --variant=v6
-  docker manifest annotate ${TARGET}:latest ${TARGET}:${BUILD_VERSION}-${NODE_RED_VERSION}-${NODE_VERSION}-alpine-arm64v8 --os=linux --arch=arm64 --variant=v8
-
-  # Manifest Push BUILD_VERSION
-  docker manifest push ${TARGET}:latest
-}
-
-docker_manifest_list_beta() {
-  # Manifest Create beta
-  echo "DOCKER MANIFEST: Create and Push docker manifest list - ${TARGET}:beta."
-  docker manifest create ${TARGET}:beta \
-    ${TARGET}:${BUILD_VERSION}-${NODE_RED_VERSION}-${NODE_VERSION}-alpine-amd64 \
-    ${TARGET}:${BUILD_VERSION}-${NODE_RED_VERSION}-${NODE_VERSION}-alpine-arm32v6 \
-    ${TARGET}:${BUILD_VERSION}-${NODE_RED_VERSION}-${NODE_VERSION}-alpine-arm64v8
-
-  # Manifest Annotate BUILD_VERSION
-  docker manifest annotate ${TARGET}:beta ${TARGET}:${BUILD_VERSION}-${NODE_RED_VERSION}-${NODE_VERSION}-alpine-arm32v6 --os=linux --arch=arm --variant=v6
-  docker manifest annotate ${TARGET}:beta ${TARGET}:${BUILD_VERSION}-${NODE_RED_VERSION}-${NODE_VERSION}-alpine-arm64v8 --os=linux --arch=arm64 --variant=v8
-
-  # Manifest Push BUILD_VERSION
-  docker manifest push ${TARGET}:beta
-}
-
-docker_manifest_list_version_os_arch() {
-  # Manifest Create alpine-amd64
-  echo "DOCKER MANIFEST: Create and Push docker manifest list - ${TARGET}:${BUILD_VERSION}-${NODE_RED_VERSION}-${NODE_VERSION}-alpine-amd64."
-  docker manifest create ${TARGET}:${BUILD_VERSION}-${NODE_RED_VERSION}-${NODE_VERSION}-alpine-amd64 \
-    ${TARGET}:${BUILD_VERSION}-${NODE_RED_VERSION}-${NODE_VERSION}-alpine-amd64
-
-  # Manifest Push alpine-amd64
-  docker manifest push ${TARGET}:${BUILD_VERSION}-${NODE_RED_VERSION}-${NODE_VERSION}-alpine-amd64
-
-  # Manifest Create alpine-arm32v6
-  echo "DOCKER MANIFEST: Create and Push docker manifest list - ${TARGET}:${BUILD_VERSION}-${NODE_RED_VERSION}-${NODE_VERSION}-alpine-arm32v6."
-  docker manifest create ${TARGET}:${BUILD_VERSION}-${NODE_RED_VERSION}-${NODE_VERSION}-alpine-arm32v6 \
-    ${TARGET}:${BUILD_VERSION}-${NODE_RED_VERSION}-${NODE_VERSION}-alpine-arm32v6
-
-  # Manifest Annotate alpine-arm32v6
-  docker manifest annotate ${TARGET}:${BUILD_VERSION}-${NODE_RED_VERSION}-${NODE_VERSION}-alpine-arm32v6 \
-    ${TARGET}:${BUILD_VERSION}-${NODE_RED_VERSION}-${NODE_VERSION}-alpine-arm32v6 --os=linux --arch=arm --variant=v6
-
-  # Manifest Push alpine-arm32v6
-  docker manifest push ${TARGET}:${BUILD_VERSION}-${NODE_RED_VERSION}-${NODE_VERSION}-alpine-arm32v6
-
-  # Manifest Create alpine-arm64v8
-  echo "DOCKER MANIFEST: Create and Push docker manifest list - ${TARGET}:${BUILD_VERSION}-${NODE_RED_VERSION}-${NODE_VERSION}-alpine-arm64v8."
-  docker manifest create ${TARGET}:${BUILD_VERSION}-${NODE_RED_VERSION}-${NODE_VERSION}-alpine-arm64v8 \
-    ${TARGET}:${BUILD_VERSION}-${NODE_RED_VERSION}-${NODE_VERSION}-alpine-arm64v8
-
-  # Manifest Annotate alpine-arm64v8
-  docker manifest annotate ${TARGET}:${BUILD_VERSION}-${NODE_RED_VERSION}-${NODE_VERSION}-alpine-arm64v8 \
-    ${TARGET}:${BUILD_VERSION}-${NODE_RED_VERSION}-${NODE_VERSION}-alpine-arm64v8 --os=linux --arch=arm64 --variant=v8
-
-  # Manifest Push alpine-arm64v8
-  docker manifest push ${TARGET}:${BUILD_VERSION}-${NODE_RED_VERSION}-${NODE_VERSION}-alpine-arm64v8
-}
-
-setup_dependencies() {
+function setup_dependencies() {
   echo "PREPARE: Setting up dependencies."
-
   sudo apt update -y
-  # sudo apt install realpath python python-pip -y
   sudo apt install --only-upgrade docker-ce -y
-  # sudo pip install docker-compose || true
-  #
-  # docker info
-  # docker-compose --version
 }
 
-update_docker_configuration() {
+function update_docker_configuration() {
   echo "PREPARE: Updating docker configuration"
 
   mkdir $HOME/.docker
@@ -230,16 +188,16 @@ update_docker_configuration() {
   sudo service docker restart
 }
 
-prepare_qemu(){
-    echo "PREPARE: Qemu"
-    # Prepare qemu to build non amd64 / x86_64 images
-    docker run --rm --privileged multiarch/qemu-user-static:register --reset
-    mkdir tmp
-    pushd tmp &&
+function prepare_qemu() {
+  echo "PREPARE: Qemu"
+  # Prepare qemu to build non amd64 / x86_64 images
+  docker run --rm --privileged multiarch/qemu-user-static:register --reset
+  mkdir tmp
+  pushd tmp &&
     curl -L -o qemu-x86_64-static.tar.gz https://github.com/multiarch/qemu-user-static/releases/download/$QEMU_VERSION/qemu-x86_64-static.tar.gz && tar xzf qemu-x86_64-static.tar.gz &&
     curl -L -o qemu-arm-static.tar.gz https://github.com/multiarch/qemu-user-static/releases/download/$QEMU_VERSION/qemu-arm-static.tar.gz && tar xzf qemu-arm-static.tar.gz &&
     curl -L -o qemu-aarch64-static.tar.gz https://github.com/multiarch/qemu-user-static/releases/download/$QEMU_VERSION/qemu-aarch64-static.tar.gz && tar xzf qemu-aarch64-static.tar.gz &&
     popd
 }
 
-main $1
+main "$1" "$2" "$3"

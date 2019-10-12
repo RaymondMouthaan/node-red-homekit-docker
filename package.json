@@ -1,16 +1,16 @@
 {
-    "name": "node-red-homekit-docker",
-    "version": "x.y.z",
-    "description": "A visual tool for wiring the Internet of Things",
+    "name": "node-red-docker",
+    "version": "1.0.2",
+    "description": "Low-code programming for event-driven applications",
     "homepage": "http://nodered.org",
     "license": "Apache-2.0",
     "repository": {
         "type": "git",
-        "url": "https://github.com/RaymondMouthaan/node-red-homekit-docker"
+        "url": "https://github.com/RaymondMouthaan/node-red-homekit-docker.git"
     },
     "main": "node_modules/node-red/red/red.js",
     "scripts": {
-        "start": "node $NODE_OPTIONS node_modules/node-red/red.js -v $FLOWS"
+        "start": "node $NODE_OPTIONS node_modules/node-red/red.js $FLOWS"
     },
     "contributors": [
         {
@@ -18,14 +18,10 @@
         }
     ],
     "dependencies": {
-        "node-red": "0.20.0",
-        "node-red-contrib-homekit-bridged": "^0.5.1",
-        "node-red-node-base64": "*",
-        "node-red-node-msgpack": "*",
-        "node-red-node-random": "*",
-        "node-red-node-suncalc": "*"
+        "node-red": "1.0.2",
+        "node-red-contrib-homekit-bridged": "0.8.0"
     },
     "engines": {
-        "node": "4.*.*"
+        "node": ">=10"
     }
 }
