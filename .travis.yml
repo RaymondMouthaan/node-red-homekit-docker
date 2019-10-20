@@ -48,7 +48,7 @@ before_script:
 
   # Set TARGET Docker Repo if empty
   - >
-    if [[ ! -z "${TARGET}" ]]; then
+    if [[ -z "${TARGET}" ]]; then
       export TARGET=raymondmm/node-red-homekit-dev
     fi
 
