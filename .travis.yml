@@ -46,11 +46,9 @@ install: true
 
 before_script:
 
-  # Set TARGET Docker Repo
+  # Set TARGET Docker Repo if empty
   - >
-    if [[ "${TRAVIS_BRANCH}" == "master" ]]; then
-      export TARGET=raymondmm/node-red-homekit
-    else
+    if [[ ! -z "${TARGET}" ]]; then
       export TARGET=raymondmm/node-red-homekit-dev
     fi
 
