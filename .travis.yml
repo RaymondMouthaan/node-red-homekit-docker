@@ -45,19 +45,14 @@ before_install:
 install: true
 
 before_script:
-
   # Set TARGET Docker Repo
+  # default TARGET = raymondmm/node-red-homekit-dev
+  # if TRAVIS_TAG starts with a `v` and only contains numbers, dots and/or dash then TARGET = raymondmm/node-red-homekit
   - >
     export TARGET=raymondmm/node-red-homekit-dev
 
-    if [[ ! -z "${TRAVIS_TAG}" ]]; then
-      export GIT_BRANCH=$(git branch --contains tags/${TRAVIS_TAG} | cut -d " " -f2)
-
-      echo "${GIT_BRANCH}"
-
-      if [[ "${GIT_BRANCH}" == "master" ]]; then
-        export TARGET=raymondmm/node-red-homekit
-      fi
+    if [[ "${TRAVIS_TAG}" =~ ^v[0-9\.-]*$ ]]; then
+      export TARGET=raymondmm/node-red-homekit
     fi
 
   # Set NODE_RED_VERSION from package.json
