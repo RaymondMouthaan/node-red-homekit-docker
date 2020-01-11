@@ -47,4 +47,13 @@ RUN curl -L -s https://github.com/just-containers/s6-overlay/releases/download/$
 COPY package.json .
 RUN npm install --unsafe-perm --no-update-notifier --only=production
 
+# Add passport openidconnect strategy to allow usage of OIDC for authentication at Node RED editor & dashboard
+RUN npm install passport-openidconnect \
+    && npm install jwt-decode
+    
+# Modify jaredhanson/passport-openidconnect to retrieve profile scope 
+# Apply modified file /usr/src/node-red/node_modules/passport-openidconnect/lib/strategy.js
+# Modified file adds profile in line 244 to get userinfo
+COPY strategy.js /usr/src/node-red/node_modules/passport-openidconnect/lib/strategy.js
+
 ENTRYPOINT [ "/init" ]
