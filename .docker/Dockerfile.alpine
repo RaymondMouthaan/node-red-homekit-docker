@@ -37,6 +37,7 @@ RUN set -ex \
       avahi-compat-libdns_sd \
       avahi-dev \
       dbus \
+      ffmpeg \
     && npm set package-lock=false
 
 # s6 overlay
