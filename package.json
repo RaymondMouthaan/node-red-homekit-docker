@@ -19,7 +19,7 @@
     ],
     "dependencies": {
         "node-red": "1.0.4",
-        "node-red-contrib-homekit-bridged": "1.0.3"
+        "node-red-contrib-homekit-bridged": "1.0.4"
     },
     "engines": {
         "node": ">=10"
