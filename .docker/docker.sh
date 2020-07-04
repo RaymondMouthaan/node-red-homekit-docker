@@ -58,6 +58,7 @@ function docker_build() {
   echo "DOCKER BUILD: qemu arch - ${QEMU_ARCH}."
   echo "DOCKER BUILD: s6 arch - ${S6_ARCH}."
   echo "DOCKER BUILD: s6 version - ${S6_VERSION}."
+  echo "DOCKER BUILD: ffmpeg arch - ${FFMPEG_ARCH}."
   echo "DOCKER BUILD: tag suffix - ${TAG_SUFFIX}."
   echo "DOCKER BUILD: docker file - ${DOCKER_FILE}."
 
@@ -74,6 +75,7 @@ function docker_build() {
     --build-arg QEMU_ARCH=${QEMU_ARCH} \
     --build-arg S6_ARCH=${S6_ARCH} \
     --build-arg S6_VERSION=${S6_VERSION} \
+    --build-arg FFMPEG_ARCH=${FFMPEG_ARCH} \
     --build-arg TAG_SUFFIX=${TAG_SUFFIX} \
     --file ./.docker/${DOCKER_FILE} \
     --tag ${TARGET}:build .

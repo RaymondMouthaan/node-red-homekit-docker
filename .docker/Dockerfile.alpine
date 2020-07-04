@@ -1,14 +1,15 @@
-ARG ARCH=amd64
-ARG NODE_VERSION=10
-ARG TAG_SUFFIX=-default
-ARG NODE_RED_BASE_TAG=1.0.3-2
+ARG ARCH
+ARG NODE_VERSION
+ARG TAG_SUFFIX
+ARG NODE_RED_BASE_TAG
 
 FROM nodered/node-red:${NODE_RED_BASE_TAG}-${NODE_VERSION}${TAG_SUFFIX}-${ARCH}
 
 ARG QEMU_ARCH
-ARG S6_ARCH=amd64
-ARG S6_VERSION=v1.22.1.0
-ARG HOMEKIT_BRIDGED_VERSION=0.8.0
+ARG S6_ARCH
+ARG S6_VERSION
+ARG FFMPEG
+ARG HOMEKIT_BRIDGED_VERSION
 
 LABEL org.label-schema.build-date=${BUILD_DATE} \
     org.label-schema.docker.dockerfile=".docker/Dockerfile.alpine" \
@@ -41,8 +42,10 @@ RUN set -ex \
     && npm set package-lock=false
 
 # s6 overlay
-RUN curl -L -s https://github.com/just-containers/s6-overlay/releases/download/${S6_VERSION}/s6-overlay-${S6_ARCH}.tar.gz \
-  | tar xvzf - -C /
+RUN curl -L -s https://github.com/just-containers/s6-overlay/releases/download/${S6_VERSION}/s6-overlay-${S6_ARCH}.tar.gz | tar xvzf - -C /
+
+# ffmpeg-for-homebridge
+RUN curl -Lf# https://github.com/homebridge/ffmpeg-for-homebridge/releases/latest/download/ffmpeg-alpine-${FFMPEG_ARCH}.tar.gz | sudo tar xzf - -C / --no-same-owner
 
 COPY package.json .
 RUN npm install --unsafe-perm --no-update-notifier --only=production
