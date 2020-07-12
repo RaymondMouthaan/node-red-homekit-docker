@@ -1,3 +1,7 @@
+# Deprecated 
+## This project is moved to [NRCHKB/node-red-contrib-homekit-docker](https://github.com/NRCHKB/node-red-contrib-homekit-docker) and will no longer be maintained.  
+## All users are recommended to replace `raymondmm/node-red-homekit` with `nrchkb/node-red-homekit` in your commands/compose file/stack file.
+
 # Node-RED-homekit-docker
 [![Greenkeeper badge](https://badges.greenkeeper.io/RaymondMouthaan/node-red-homekit-docker.svg)](https://greenkeeper.io/)
 [![Build Status](https://travis-ci.org/RaymondMouthaan/node-red-homekit-docker.svg?branch=master)](https://travis-ci.org/RaymondMouthaan/node-red-homekit-docker)
